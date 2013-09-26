@@ -293,3 +293,32 @@ div[role=tab].active {
 div[role=tab].active div[role=tab-box]{
   background-color: #002b36;
 }
+
+progress {
+    position: absolute;
+    left: 0px;
+    top: 0;
+    width: 100%;
+    -webkit-appearance: none;
+    border: 0;
+    height: 10px;
+    background-color: #dadcdd;
+    opacity: 0;
+    transition: ease-out 0.5s;
+    box-shadow: 3px 3px 5px red inset;
+}
+
+progress.active {
+  opacity: 1;
+  transition: ease-out 0.2s;
+}
+progress::-webkit-progress-bar {
+  background-color: #dadcdd;
+}
+progress::-webkit-progress-value {
+  background-color: #40cd5d;
+}
+progress::-moz-progress-bar {
+  background-color: #40cd5d;
+}
+
