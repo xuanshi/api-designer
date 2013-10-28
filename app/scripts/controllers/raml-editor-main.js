@@ -2,7 +2,7 @@
 
 angular.module('ramlEditorApp')
   .constant('AUTOSAVE_INTERVAL', 60000)
-  .constant('UPDATE_RESPONSIVENESS_INTERVAL', 800)
+  .constant('UPDATE_RESPONSIVENESS_INTERVAL', 600)
   .constant('REFRESH_FILES_INTERVAL', 5000)
   .constant('DEFAULT_PATH', '/')
   .value('afterBootstrap', function () { })
@@ -219,7 +219,7 @@ angular.module('ramlEditorApp')
         if (currentUpdateTimer) {
           $timeout.cancel(currentUpdateTimer);
         }
-        
+
         currentUpdateTimer = $timeout(function () {
           $scope.sourceUpdated();
           currentUpdateTimer = undefined;

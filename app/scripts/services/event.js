@@ -14,7 +14,7 @@
     var lastEvents = {};
 
     service.broadcast = function (eventName, data) {
-      $rootScope.$broadcast(eventName, data);
+      $rootScope.$emit(eventName, data);
       lastEvents[eventName] = { data: data };
     };
 
