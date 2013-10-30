@@ -10,12 +10,14 @@ angular.module('raml')
       this.init();
     }
 
-    Element.protoype = {
+    Element.prototype = {
       init: function () {
         var self = this;
         this.properties.forEach(function (property) {
           if (property.persistent) {
             self[property.name] = config.get(property.name, property.defaultValue);
+          } else {
+            self[property.name] = property.defaultValue;
           }
         });
       },
@@ -60,6 +62,7 @@ angular.module('raml')
 
     service.addElement = function (name, properties) {
       service[name] = new Element(name, properties);
+
       return service[name];
     };
 
