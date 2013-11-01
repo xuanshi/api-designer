@@ -17,7 +17,8 @@ describe('Configurable Elements Service', function () {
       $provide.decorator('config', function () {
         return {
           get: sinon.stub(),
-          set: sinon.stub()
+          set: sinon.stub(),
+          save: sinon.stub()
         };
       });
     });
@@ -65,7 +66,7 @@ describe('Configurable Elements Service', function () {
       mockConfig.set.calledWith('theme').should.not.be.ok;
     });
 
-    it('should save configuration when setting persistant properties', function () {
+    it('should save configuration when setting persistent properties', function () {
       // Arrange
       var propertyConfig = [ { name: 'theme', persistent: true } ];
       elements.addElement('editor', propertyConfig);
@@ -76,6 +77,62 @@ describe('Configurable Elements Service', function () {
       // Assert
       elements.editor.theme.should.be.equal('dark');
       mockConfig.set.calledWith('theme').should.be.ok;
+    });
+
+    it('should allow to toggle boolean values', function () {
+      // Arrange
+      var propertyConfig = [ { name: 'collapsed', persistent: false } ];
+      elements.addElement('editor', propertyConfig);
+      elements.editor.collapsed = true;
+
+      // Act
+      elements.editor.toggle('collapsed');
+
+      // Assert
+      elements.editor.collapsed.should.be.equal(false);
+      mockConfig.set.calledWith('collapsed').should.not.be.ok;
+    });
+
+    it('should allow to toggle persistent values', function () {
+      // Arrange
+      var propertyConfig = [ { name: 'collapsed', persistent: true } ];
+      elements.addElement('editor', propertyConfig);
+      elements.editor.collapsed = true;
+
+      // Act
+      elements.editor.toggle('collapsed');
+
+      // Assert
+      elements.editor.collapsed.should.be.equal(false);
+      mockConfig.set.calledWith('collapsed').should.be.ok;
+    });
+
+    it('should allow to increase values', function () {
+      // Arrange
+      var propertyConfig = [ { name: 'openFiles', persistent: false } ];
+      elements.addElement('editor', propertyConfig);
+      elements.editor.openFiles = 1;
+
+      // Act
+      elements.editor.increase('openFiles');
+
+      // Assert
+      elements.editor.openFiles.should.be.equal(2);
+      mockConfig.set.calledWith('openFiles').should.not.be.ok;
+    });
+
+    it('should allow to decrease values', function () {
+      // Arrange
+      var propertyConfig = [ { name: 'openFiles', persistent: false } ];
+      elements.addElement('editor', propertyConfig);
+      elements.editor.openFiles = 1;
+
+      // Act
+      elements.editor.decrease('openFiles');
+
+      // Assert
+      elements.editor.openFiles.should.be.equal(0);
+      mockConfig.set.calledWith('openFiles').should.not.be.ok;
     });
   });
 
