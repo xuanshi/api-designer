@@ -24,6 +24,7 @@
     "describe": false,
     "should": false,
     "it": false,
+    "xit": false,
     "after": false,
     "beforeEach": false,
     "afterEach": false,

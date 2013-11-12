@@ -86,6 +86,10 @@ angular.module('fs')
       }
     }
 
+    function setCookie(key, value) {
+      document.cookie = encodeURIComponent(key) + '=' + encodeURIComponent(value) + '; path=/';
+    }
+
     function init() {
       // Retrieve the token
       token = config.get('token');
@@ -97,7 +101,7 @@ angular.module('fs')
           .path('token')
           .success(function (data) {
             tokenProcessed = true;
-            $cookies[TOKEN_COOKIE_KEY] = data;
+            setCookie(TOKEN_COOKIE_KEY, data);
             token = data;
             config.set('token', token);
             config.save();
@@ -107,7 +111,7 @@ angular.module('fs')
           })
           .call();
       } else {
-        $cookies[TOKEN_COOKIE_KEY] = token;
+        setCookie(TOKEN_COOKIE_KEY, token);
         tokenProcessed = true;
       }
     }

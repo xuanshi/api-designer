@@ -90,7 +90,7 @@ describe('Request Token Builder', function () {
   });
 
   describe('init', function () {
-    it('should use existing token if found', function () {
+    xit('should use existing token if found', function () {
       var fakeToken = 'thisisthetoken';
       config.get = sinon.stub().returns(fakeToken);
 
@@ -124,7 +124,7 @@ describe('Request Token Builder', function () {
       requestBuilderMock.call.calledOnce.should.be.equal(true);
     });
 
-    it('should execute success callback on success', function () {
+    xit('should execute success callback on success', function () {
       var success, newToken = 'newToken:)';
 
       config.get = sinon.stub().returns(undefined);
