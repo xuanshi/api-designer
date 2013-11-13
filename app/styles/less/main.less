@@ -236,6 +236,44 @@ div[role=preview] > div[role=console] {
   height: ~"calc(100% - 80px)";
 }
 
+div[role=preview] > a[role=console-collapse] {
+  &:after {
+    font-family: FontAwesome;
+    content: '\f066';
+    display: block;
+    position: absolute;
+    top: -12px;
+    right: -12px;
+    height: 15px;
+    width: 14px;
+    cursor: pointer;
+  }
+}
+
+div[role=raml-editor].console-collapsed {
+  div[role=editor] {
+    width: ~"calc(100% - 30px)";
+  }
+
+  div[role=preview-wrapper] {
+    width: 0px;
+    padding-left: 10px;
+
+    [role=console] {
+      display: none;
+    }
+
+    a[role=console-collapse]:after {
+      content: '\f065';
+    }
+
+    a[role=logo] {
+      display: none;
+    }
+  }
+}
+
+
 div[role=preview] > a[role=logo] {
   display: block;
   position: absolute;
