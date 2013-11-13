@@ -1,4 +1,4 @@
-<div role="raml-editor" class="{{theme}}" ng-controller="ramlEditorMain">
+<div role="raml-editor" class="{{theme}}" ng-class="{'console-collapsed': consoleCollapsed}" ng-controller="ramlEditorMain">
   <header>
     <h1>
       <strong>API</strong> Designer
@@ -41,6 +41,7 @@
       <div role="console">
         <raml-console></raml-console>
       </div>
+      <a role="console-collapse" ng-click="consoleCollapsed = !consoleCollapsed"></a>
       <a role="logo" target="_blank" href="http://mulesoft.com"></a>
     </div>
   </div>
