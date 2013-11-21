@@ -78,68 +78,82 @@ angular.module('codeFolding', ['raml', 'lightweightParse'])
       return cm.getLine(firstChildLineNumber);
     };
   })
-  .factory('getFoldRange', function (getParentLine, getParentLineNumber, getLineIndent) {
-    function _hasParent(pattern, cm, lineNumber) {
-      if(lineNumber === 0 || !lineNumber) {
-        return false;
-      }
-
-      var parentLineNumber = getParentLineNumber(cm, lineNumber);
-
-      if (pattern.test(cm.getLine(parentLineNumber))) {
-        return true;
-      } else {
-        return _hasParent (pattern, cm, parentLineNumber);
-      }
-    }
-
+  .factory('getFoldRange', function (getScopes, getEditorTextAsArrayOfLines, getLineIndent) {
     return function (cm, start) {
-      var line = cm.getLine(start.line);
-      var lineIndentInfo = getLineIndent(line);
-      var nextLineIndentInfo;
+      var scopes = getScopes(getEditorTextAsArrayOfLines(cm)),
+          line = start.line,
+          currentLineLevel,
+          currentLineScope,
+          currentLineIndexInScope,
+          endLine,
+          parentLineScope,
+          parentEndLine,
+          parentLineIndexInScope;
 
-      if(lineIndentInfo.content.length === 0) {
-        return;
-      }
+      if (scopes.scopesByLine[line - 1]) {
+        currentLineLevel = scopes.scopesByLine[line - 1].tabCount;
+        currentLineScope = scopes.scopeLevels[currentLineLevel];
 
-      var nextLine = cm.getLine(start.line + 1);
-      if (!nextLine) {
-        return;
-      }
+        // Find the current line in the scope
+        currentLineIndexInScope = currentLineScope.indexOf(line);
 
-      var indent = lineIndentInfo.tabCount;
-      var nextLineIndent = getLineIndent(nextLine).tabCount;
+        //while (currentLineIndexInScope === -1 && currentLineLevel < cm.lineCount() ) {
+        //  currentLineLevel++;
+        //  currentLineScope = scopes.scopeLevels[currentLineLevel];
 
-      if(/(content|schema|example):(\s?)\|/.test(getParentLine(cm, start.line))) {
-        return;
-      }
+        //  // Find the current line in the scope
+        //  currentLineIndexInScope = currentLineScope.indexOf(line);
+        //}
 
-      if(_hasParent(/(content|schema|example):(\s?)\|/, cm, start.line)){
-        return;
-      }
-
-      if(nextLineIndent > indent) {
-        for(var i = start.line + 2, end = cm.lineCount(); i < end; ++i) {
-          nextLine = cm.getLine(i);
-          nextLineIndentInfo = getLineIndent(nextLine);
-          nextLineIndent = nextLineIndentInfo.tabCount;
-
-          if(nextLineIndent <= indent && nextLineIndentInfo.content.length > 0) {
-            nextLine = cm.getLine(i-1);
-            return {
-              from: CodeMirror.Pos(start.line, line.length),
-              to: CodeMirror.Pos(i - 1, nextLine.length)
-            };
-          }
-
-          if (i === end - 1) {
-            nextLine = cm.getLine(end - 1);
-            return {
-              from: CodeMirror.Pos(start.line, line.length),
-              to: CodeMirror.Pos(end - 1, nextLine.length)
-            };
-          }
+        if (currentLineLevel === cm.lineCount() ) {
+          alert('this should never happen');
         }
+
+        var parentLineNumber = scopes.scopesByLine[line - 1].parent;
+        if (parentLineNumber) {
+          var parentLineLevel = scopes.scopesByLine[parentLineNumber].tabCount;
+          parentLineScope = scopes.scopeLevels[parentLineLevel];
+
+          parentLineIndexInScope = parentLineScope.indexOf(parentLineNumber);
+        } else {
+          parentLineScope = [];
+          parentLineIndexInScope = 0;
+        }
+
+        // Get following element line
+        endLine = currentLineScope.slice(currentLineIndexInScope + 1, currentLineIndexInScope + 2);
+        parentEndLine = parentLineScope.slice(parentLineIndexInScope + 1, parentLineIndexInScope + 2);
+
+        if (endLine.length) {
+          endLine = endLine[0] - 1;
+        }
+        
+        if (parentEndLine.length) {
+          parentEndLine = parentEndLine[0] - 1;
+        } else {
+          parentEndLine = endLine;
+        }
+
+        if (endLine > parentEndLine) {
+          endLine = parentEndLine;
+        } else if (parentEndLine <= endLine) {
+          endLine = endLine;
+        }
+        
+        if (endLine <= line) {
+          return;
+        }
+
+        debugger;
+
+        // If endLine not found it must be the last line of the buffer
+        //debugger;
+        //endLine = cm.lineCount() - 1;
+        
+        return {
+          from: CodeMirror.Pos(line, cm.getLine(line).length),
+          to: CodeMirror.Pos(endLine, cm.getLine(endLine).length)
+        };
       }
     };
   });

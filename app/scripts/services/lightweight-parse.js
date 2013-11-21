@@ -3,7 +3,7 @@
 angular.module('lightweightParse', ['utils'])
   .factory('getEditorTextAsArrayOfLines', function () {
     var lastStringCache;
-    
+
     return function (editor) {
       var textAsList = [], i;
 
@@ -19,7 +19,7 @@ angular.module('lightweightParse', ['utils'])
 
       return textAsList;
     };
-  
+
   })
   .value('extractKey', function (value) {
     value = value || '';
@@ -85,44 +85,52 @@ angular.module('lightweightParse', ['utils'])
 
       zipValues = arrayOfLines.map(function (line, index) {
         var lineIndentInfo = getLineIndent(line);
-        return [lineIndentInfo.tabCount, lineIndentInfo.content, index];
+        return {tabCount: lineIndentInfo.tabCount, content: lineIndentInfo.content, index: index};
       });
 
-      var levelTable = zipValues.reduce(function (x,y) {
-        var currentArray = currentIndexes[y[0] - 1],
-          lastArrayIndex, currentIndex;
+      var levelTable = zipValues.reduce(function (scopesByLine,y) {
+        var currentArray = currentIndexes[y.tabCount - 1],
+          lastArrayIndex, parentIndex;
 
         if (currentArray) {
           lastArrayIndex = currentArray.length - 1;
-          currentIndex = currentIndexes[y[0] - 1][lastArrayIndex];
-        } else if (y[0] > 1) {
+          parentIndex = currentIndexes[y.tabCount - 1][lastArrayIndex];
+        } else if (y.tabCount > 1) {
           // Case for lists, we fetch a level lower
-          currentArray = currentIndexes[y[0] - 2];
+          currentArray = currentIndexes[y.tabCount - 2];
 
           // Ignore this line if the tab level is invalid
           if (currentArray) {
             lastArrayIndex = currentArray.length - 1;
-            currentIndex = currentIndexes[y[0] - 2][lastArrayIndex];
+            parentIndex = currentIndexes[y.tabCount - 2][lastArrayIndex];
 
-            x[currentIndex] = x[currentIndex] || [];
-            x[currentIndex].push([y[2], y[1]]);
+            scopesByLine[parentIndex] = scopesByLine[parentIndex] || [];
+            scopesByLine[parentIndex].tabCount = y.tabCount;
+            if (y.tabCount - 3 > 0) {
+              scopesByLine[parentIndex].parent = currentIndexes[y.tabCount - 3].slice(-1)[0];
+            }
+            scopesByLine[parentIndex].push({index: y.index, content: y.content, tabCount: y.tabCount});
 
-            currentIndexes[y[0] - 1] = currentIndexes[y[0] - 1] || [];
-            currentIndexes[y[0] - 1].push(y[2]);
+            currentIndexes[y.tabCount - 1] = currentIndexes[y.tabCount - 1] || [];
+            currentIndexes[y.tabCount - 1].push(y.index);
           }
 
-          return x;
+          return scopesByLine;
         } else {
           // Case of the first element of the first level
-          currentIndex = 0;
+          parentIndex = 0;
         }
 
-        x[currentIndex] = x[currentIndex] || [];
-        x[currentIndex].push([y[2], y[1]]);
+        scopesByLine[parentIndex] = scopesByLine[parentIndex] || [];
+        scopesByLine[parentIndex].tabCount = y.tabCount;
+        if (y.tabCount - 3 > 0) {
+          scopesByLine[parentIndex].parent = currentIndexes[y.tabCount - 2].slice(-1)[0];
+        }
+        scopesByLine[parentIndex].push({index: y.index, content: y.content, tabCount: y.tabCount});
 
-        currentIndexes[y[0]] = currentIndexes[y[0]] || [];
-        currentIndexes[y[0]].push(y[2]);
-        return x;
+        currentIndexes[y.tabCount] = currentIndexes[y.tabCount] || [];
+        currentIndexes[y.tabCount].push(y.index);
+        return scopesByLine;
       }, {});
 
       lastArrayCache = {
