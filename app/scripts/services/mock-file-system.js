@@ -15,6 +15,18 @@ angular.module('fs')
       }
     }
 
+    function delayOperation(operation) {
+      $timeout(operation, delay);
+    }
+
+    function getFile(path, name) {
+      for (var i = 0; i < files.length; i++) {
+        if (files[i].path === path && files[i].name === name) {
+          return files[i];
+        }
+      }
+    }
+
     service.directory = function (path) {
       var deferred = $q.defer();
       var entries  = files
@@ -26,9 +38,9 @@ angular.module('fs')
         })
       ;
 
-      $timeout(function () {
+      delayOperation(function () {
         deferred.resolve(entries);
-      }, delay);
+      });
 
       return deferred.promise;
     };
@@ -41,7 +53,7 @@ angular.module('fs')
         })
       ;
 
-      $timeout(function () {
+      delayOperation(function () {
         var entry = entries[0];
         if (entry) {
           entry.content = content;
@@ -55,7 +67,7 @@ angular.module('fs')
 
         localStorage[LOCAL_PERSISTENCE_KEY] = JSON.stringify(files);
         deferred.resolve();
-      }, delay);
+      });
 
       return deferred.promise;
     };
@@ -64,20 +76,20 @@ angular.module('fs')
       var deferred = $q.defer();
       var entries  = files
         .filter(function (f) {
-          return (f.path === path && f.name === name) || ( '/' + f.name === path + '/' + name) || ( f.name === path + '/' + name);
+          return (f.path === path && f.name === name) || ('/' + f.name === path + '/' + name) || (f.name === path + '/' + name);
         })
         .map(function (f) {
           return f.content;
         })
       ;
 
-      $timeout(function () {
+      delayOperation(function () {
         if (entries.length) {
           deferred.resolve(entries[0] || '');
         } else {
           deferred.reject('file with path="' + path + '" and name="' + name + '" does not exist');
         }
-      }, delay);
+      });
 
       return deferred.promise;
     };
@@ -90,16 +102,58 @@ angular.module('fs')
         })
       ;
 
-      $timeout(function () {
+      delayOperation(function () {
         if (entries.length) {
           files.splice(files.indexOf(entries[0]), 1);
+          localStorage[LOCAL_PERSISTENCE_KEY] = JSON.stringify(files);
+
           deferred.resolve();
         } else {
           deferred.reject('file with path="' + path + '" and name="' + name + '" does not exist');
         }
-      }, delay);
+      });
 
       return deferred.promise;
+    };
+
+    service.saveMetadata = function saveMetadata(path, name, metadata) {
+      var deferred = $q.defer();
+      var file     = getFile(path, name);
+
+      delayOperation(function () {
+        if (file) {
+          file.metadata = metadata;
+          localStorage[LOCAL_PERSISTENCE_KEY] = JSON.stringify(files);
+
+          deferred.resolve();
+        } else {
+          deferred.reject('file with path="' + path + '" and name="' + name + '" does not exist');
+        }
+      });
+
+      return deferred.promise;
+    };
+
+    service.loadMetadata = function loadMetadata(path, name) {
+      var deferred = $q.defer();
+      var file     = getFile(path, name);
+
+      delayOperation(function () {
+        if (file) {
+          deferred.resolve(file.metadata || {});
+        } else {
+          deferred.reject('file with path="' + path + '" and name="' + name + '" does not exist');
+        }
+      });
+
+      return deferred.promise;
+    };
+
+    service.saveMetadataKey = function saveMetadataKey(path, name, key, value) {
+      return service.loadMetadata(path, name).then(function success(metadata) {
+        metadata[key] = value;
+        return service.saveMetadata(path, name, metadata);
+      });
     };
 
     return service;

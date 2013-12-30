@@ -58,9 +58,11 @@ module.exports = function(config) {
       'app/scripts/services/request-builder.js',
       'app/scripts/services/file-system.js',
       'app/scripts/services/mock-file-system.js',
+      'app/scripts/services/mocking-service.js',
       'app/scripts/filters/string-filters.js',
       'app/scripts/controllers/raml-editor-main.js',
       'app/scripts/controllers/raml-editor-shelf.js',
+      'app/scripts/controllers/raml-editor-mocking-service.js',
       'app/scripts/controllers/notifications.js',
 
       'test/mock/**/*.js',

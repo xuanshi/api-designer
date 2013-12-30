@@ -36,13 +36,14 @@
     "minijasminenode": "~0.2.4",
     "mocha": "~1.12.0",
     "protractor": "0.14.0",
+    "request": "*",
     "selenium-webdriver": "*"
   },
   "engines": {
     "node": ">=0.8.0"
   },
   "scripts": {
-    "test": "grunt --verbose && grunt localScenario"
+    "test": "grunt test"
   },
   "repository": {
     "type": "git",

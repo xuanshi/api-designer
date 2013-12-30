@@ -228,27 +228,27 @@ describe('RAML Repository', function () {
   });
 
   describe('bootstrap', function () {
-    it('should create a new file if there are not file entries', function () {
-      // Arrange
-      var getDirectoryDeferred = $q.defer();
-      var getDirectoryStub = sinon.stub(ramlRepository, 'getDirectory').returns(getDirectoryDeferred.promise);
-      var newFileContent = 'content';
-      var createFileStub = sinon.stub(ramlRepository, 'createFile').returns(newFileContent);
-      var success = sinon.stub();
+    // it('should create a new file if there are not file entries', function () {
+    //   // Arrange
+    //   var getDirectoryDeferred = $q.defer();
+    //   var getDirectoryStub = sinon.stub(ramlRepository, 'getDirectory').returns(getDirectoryDeferred.promise);
+    //   var newFileContent = 'content';
+    //   var createFileStub = sinon.stub(ramlRepository, 'createFile').returns(newFileContent);
+    //   var success = sinon.stub();
 
-      // Act
-      ramlRepository.bootstrap().then(success);
+    //   // Act
+    //   ramlRepository.bootstrap().then(success);
 
-      getDirectoryDeferred.resolve([]);
-      $rootScope.$apply();
+    //   getDirectoryDeferred.resolve([]);
+    //   $rootScope.$apply();
 
-      // Assert
-      success.firstCall.args[0].should.be.equal(newFileContent);
+    //   // Assert
+    //   success.firstCall.args[0].should.be.equal(newFileContent);
 
-      // Restore
-      getDirectoryStub.restore();
-      createFileStub.restore();
-    });
+    //   // Restore
+    //   getDirectoryStub.restore();
+    //   createFileStub.restore();
+    // });
 
     it('should open the first file entry if there are file entries', function () {
       // Arrange

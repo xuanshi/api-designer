@@ -22,7 +22,8 @@ angular.module('raml')
     service.getEmptyRaml = function () {
       return [
         '#%RAML 0.8',
-        'title:'
+        'title: My API',
+        ''
       ].join('\n');
     };
 

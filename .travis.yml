@@ -17,6 +17,7 @@ after_success:
   - export DIST_DIR="html/${TRAVIS_BRANCH}"
   - ssh ${ACCEPTANCE_USER}@${ACCEPTANCE_HOST} rm -rf ${DIST_DIR}
   - ssh ${ACCEPTANCE_USER}@${ACCEPTANCE_HOST} mkdir -p ${DIST_DIR}
+  - grunt build
   - scp -r dist/* ${ACCEPTANCE_USER}@${ACCEPTANCE_HOST}:${DIST_DIR}/
 env:
   global:

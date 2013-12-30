@@ -104,6 +104,7 @@ angular.module('ramlEditorApp')
       loadRamlDefinition(definition).then(
         // success
         safeApplyWrapper($scope, function (value) {
+          $scope.$broadcast('fileParsed', value);
           eventService.broadcast('event:raml-parsed', value);
         }),
 
@@ -144,16 +145,26 @@ angular.module('ramlEditorApp')
     };
 
     $scope.bootstrap = function () {
-      ramlRepository.bootstrap().then($scope.switchFile);
+      ramlRepository.bootstrap().then(function success(file) {
+        if (file) {
+          $scope.switchFile(file);
+          return;
+        }
+
+        $scope.newFile();
+      });
     };
 
     $scope.switchFile = function (file) {
       if (!$scope.canSave() || ($scope.canSave() && $scope._confirmLoseChanges())) {
-        $scope.file = file;
+        $scope.file      = file;
         $scope.firstLoad = true;
+
         editor.setValue($scope.file.contents);
         editor.setCursor({line: 0, ch: 0});
         editor.focus();
+
+        $scope.$broadcast('fileLoaded', $scope.file);
       }
     };
 
@@ -196,9 +207,11 @@ angular.module('ramlEditorApp')
       if (!$scope.canSave() || ($scope.canSave() && $scope._confirmLoseChanges())) {
         $scope.file = ramlRepository.createFile();
         editor.setValue($scope.file.contents);
-        editor.setCursor({line: 1, ch: 0});
+        editor.setCursor(editor.lineCount());
 
         $timeout.cancel(saveTimer);
+
+        $scope.$broadcast('fileCreated', $scope.file);
       }
     };
 
@@ -252,6 +265,8 @@ angular.module('ramlEditorApp')
         saveTimer = $timeout($scope.save, AUTOSAVE_INTERVAL);
 
         safeApply($scope);
+
+        $scope.$broadcast('fileSaved', $scope.file);
       });
     };
 

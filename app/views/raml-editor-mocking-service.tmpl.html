@@ -1,0 +1,19 @@
+<div class="mocking-service" ng-controller="ramlEditorMockingService" ng-switch on="!!loading">
+  <!-- loading state -->
+  <div ng-switch-when="true" class="announcement">
+    <i class="icon-spinner icon-spin"></i> {{loading}}
+  </div>
+
+  <!-- working state -->
+  <div ng-switch-when="false">
+    <div ng-show="!file.persisted" class="announcement">
+      <span>Please <span class="action" ng-click="save()">save</span> your file first before using Mocking Service</span>
+    </div>
+
+    <div ng-show="file.persisted" class="table" style="width: 100%">
+      <div class="table-cell" style="padding: 0 10px">
+        <span class="action" ng-click="toggleMockingService()">{{mock ? 'Disable' : 'Enable'}}</span> Mocking Service
+      </div>
+    </div>
+  </div>
+</div>
