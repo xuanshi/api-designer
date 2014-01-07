@@ -1,9 +1,11 @@
 'use strict';
 var AssertsHelper = require ('../../../lib/asserts-helper.js').AssertsHelper;
 var EditorHelper = require ('../../../lib/editor-helper.js').EditorHelper;
+var ShelfHelper = require ('../../../lib/shelf-helper.js').ShelfHelper;
 describe('parser ',function(){
   var designerAsserts= new AssertsHelper();
   var editor= new EditorHelper();
+  var shelf = new ShelfHelper();
 
   describe('rt-root', function () {
 
@@ -257,571 +259,91 @@ describe('parser ',function(){
       });
     }); // property already used
 
-    describe('method already declared', function () {
-
-      it('should fail: method already declared: get', function () {
-        var definition = [
-          '#%RAML 0.8',
-          '---',
-          'title: My API',
-          'resourceTypes:',
-          '  - rt1:',
-          '      get:',
-          '      get:'
-        ].join('\\n');
-        editor.setValue(definition);
-        designerAsserts.parserError('7','method already declared: \'get\'');
-      });
-
-      it('should fail: method already declared: post', function () {
-        var definition = [
-          '#%RAML 0.8',
-          '---',
-          'title: My API',
-          'resourceTypes:',
-          '  - rt1:',
-          '      post:',
-          '      post:'
-        ].join('\\n');
-        editor.setValue(definition);
-        designerAsserts.parserError('7','method already declared: \'post\'');
-      });
-
-      it('should fail: method already declared: put', function () {
-        var definition = [
-          '#%RAML 0.8',
-          '---',
-          'title: My API',
-          'resourceTypes:',
-          '  - rt1:',
-          '      put:',
-          '      put:'
-        ].join('\\n');
-        editor.setValue(definition);
-        designerAsserts.parserError('7','method already declared: \'put\'');
-      });
-
-      it('should fail: method already declared: delete', function () {
-        var definition = [
-          '#%RAML 0.8',
-          '---',
-          'title: My API',
-          'resourceTypes:',
-          '  - rt1:',
-          '      delete:',
-          '      delete:'
-        ].join('\\n');
-        editor.setValue(definition);
-        designerAsserts.parserError('7','method already declared: \'delete\'');
-      });
-
-      it('should fail: method already declared: head', function () {
-        var definition = [
-          '#%RAML 0.8',
-          '---',
-          'title: My API',
-          'resourceTypes:',
-          '  - rt1:',
-          '      head:',
-          '      head:'
-        ].join('\\n');
-        editor.setValue(definition);
-        designerAsserts.parserError('7','method already declared: \'head\'');
-      });
-
-      it('should fail: method already declared: patch', function () {
-        var definition = [
-          '#%RAML 0.8',
-          '---',
-          'title: My API',
-          'resourceTypes:',
-          '  - rt1:',
-          '      patch:',
-          '      patch:'
-        ].join('\\n');
-        editor.setValue(definition);
-        designerAsserts.parserError('7','method already declared: \'patch\'');
-      });
-
-      it('should fail: method already declared: options', function () {
-        var definition = [
-          '#%RAML 0.8',
-          '---',
-          'title: My API',
-          'resourceTypes:',
-          '  - rt1:',
-          '      options:',
-          '      options:'
-        ].join('\\n');
-        editor.setValue(definition);
-        designerAsserts.parserError('7','method already declared: \'options\'');
-      });
-
-    }); // method already declared
-
     describe('resourceTypes - Methods', function () {
 
-      describe('get', function () {
+      var methods = shelf.elemResourceLevelMethods;
+      methods.forEach(function(method){
+        it(method+' should fail: method already declared: get', function () {
+          var definition = [
+            '#%RAML 0.8',
+            '---',
+            'title: My API',
+            'resourceTypes:',
+            '  - rt1:',
+            '      '+method+':',
+            '      '+method+':'
+          ].join('\\n');
+          editor.setValue(definition);
+          designerAsserts.parserError('7','method already declared: \''+method+'\'');
+        });
+      });
 
-        describe('protocols', function () {
-          it('should fail: RTMethods-protocols property already used protocol', function () {
-            var definition = [
-              '#%RAML 0.8',
-              '---',
-              'title: My API',
-              'resourceTypes:',
-              '  - hola:',
-              '      get:',
-              '        protocols: []',
-              '        protocols:'
-            ].join('\\n');
-            editor.setValue(definition);
-            designerAsserts.parserError('8','property already used: \'protocols\'');
-          });
+      methods.forEach(function(method){
+        it(method+' should fail: RTMethods-protocols property already used protocol', function () {
+          var definition = [
+            '#%RAML 0.8',
+            '---',
+            'title: My API',
+            'resourceTypes:',
+            '  - hola:',
+            '      '+method+':',
+            '        protocols: []',
+            '        protocols:'
+          ].join('\\n');
+          editor.setValue(definition);
+          designerAsserts.parserError('8','property already used: \'protocols\'');
+        });
+      });
 
-          it('should fail: RTMethods-protocol property must be an array', function () {
-            var definition = [
-              '#%RAML 0.8',
-              '---',
-              'title: My API',
-              'resourceTypes:',
-              '  - hola:',
-              '      get:',
-              '        protocols:'
-            ].join('\\n');
-            editor.setValue(definition);
-            designerAsserts.parserError('7','property must be an array');
-          });
+      methods.forEach(function(method){
+        it(method+' should fail: RTMethods-protocol property must be an array', function () {
+          var definition = [
+            '#%RAML 0.8',
+            '---',
+            'title: My API',
+            'resourceTypes:',
+            '  - hola:',
+            '      '+method+':',
+            '        protocols:'
+          ].join('\\n');
+          editor.setValue(definition);
+          designerAsserts.parserError('7','property must be an array');
+        });
+      });
 
-          it('should fail: RTMethods-protocol value must be a string', function () {
-            var definition = [
-              '#%RAML 0.8',
-              '---',
-              'title: My API',
-              'resourceTypes:',
-              '  - hola:',
-              '      get:',
-              '        protocols:',
-              '          - '
-            ].join('\\n');
-            editor.setValue(definition);
-            designerAsserts.parserError('8','value must be a string');
-          });
+      methods.forEach(function(method){
+        it(method+' should fail: RTMethods-protocol value must be a string', function () {
+          var definition = [
+            '#%RAML 0.8',
+            '---',
+            'title: My API',
+            'resourceTypes:',
+            '  - hola:',
+            '      '+method+':',
+            '        protocols:',
+            '          - '
+          ].join('\\n');
+          editor.setValue(definition);
+          designerAsserts.parserError('8','value must be a string');
+        });
+      });
 
-          it('should fail: only HTTP and HTTPS values are allowed', function () {
-            var definition = [
-              '#%RAML 0.8',
-              '---',
-              'title: My API',
-              'resourceTypes:',
-              '  - hola:',
-              '      get:',
-              '        protocols:',
-              '          - htt'
-            ].join('\\n');
-            editor.setValue(definition);
-            designerAsserts.parserError('8','only HTTP and HTTPS values are allowed');
-          });
-
-        }); // protocols
-
-      }); // get
-
-      describe('post', function () {
-
-        describe('protocols', function () {
-          it('should fail: RTMethods-protocols property already used protocol', function () {
-            var definition = [
-              '#%RAML 0.8',
-              '---',
-              'title: My API',
-              'resourceTypes:',
-              '  - hola:',
-              '      post:',
-              '        protocols: []',
-              '        protocols:'
-            ].join('\\n');
-            editor.setValue(definition);
-            designerAsserts.parserError('8','property already used: \'protocols\'');
-          });
-
-          it('should fail: RTMethods-protocol property must be an array', function () {
-            var definition = [
-              '#%RAML 0.8',
-              '---',
-              'title: My API',
-              'resourceTypes:',
-              '  - hola:',
-              '      post:',
-              '        protocols:'
-            ].join('\\n');
-            editor.setValue(definition);
-            designerAsserts.parserError('7','property must be an array');
-          });
-
-          it('should fail: RTMethods-protocol value must be a string', function () {
-            var definition = [
-              '#%RAML 0.8',
-              '---',
-              'title: My API',
-              'resourceTypes:',
-              '  - hola:',
-              '      post:',
-              '        protocols:',
-              '          - '
-            ].join('\\n');
-            editor.setValue(definition);
-            designerAsserts.parserError('8','value must be a string');
-          });
-
-          it('should fail: only HTTP and HTTPS values are allowed', function () {
-            var definition = [
-              '#%RAML 0.8',
-              '---',
-              'title: My API',
-              'resourceTypes:',
-              '  - hola:',
-              '      post:',
-              '        protocols:',
-              '          - htt'
-            ].join('\\n');
-            editor.setValue(definition);
-            designerAsserts.parserError('8','only HTTP and HTTPS values are allowed');
-          });
-
-        }); // protocols
-
-      }); // post
-
-      describe('put', function () {
-
-        describe('protocols', function () {
-          it('should fail: RTMethods-protocols property already used protocol', function () {
-            var definition = [
-              '#%RAML 0.8',
-              '---',
-              'title: My API',
-              'resourceTypes:',
-              '  - hola:',
-              '      put:',
-              '        protocols: []',
-              '        protocols:'
-            ].join('\\n');
-            editor.setValue(definition);
-            designerAsserts.parserError('8','property already used: \'protocols\'');
-          });
-
-          it('should fail: RTMethods-protocol property must be an array', function () {
-            var definition = [
-              '#%RAML 0.8',
-              '---',
-              'title: My API',
-              'resourceTypes:',
-              '  - hola:',
-              '      put:',
-              '        protocols:'
-            ].join('\\n');
-            editor.setValue(definition);
-            designerAsserts.parserError('7','property must be an array');
-          });
-
-          it('should fail: RTMethods-protocol value must be a string', function () {
-            var definition = [
-              '#%RAML 0.8',
-              '---',
-              'title: My API',
-              'resourceTypes:',
-              '  - hola:',
-              '      put:',
-              '        protocols:',
-              '          - '
-            ].join('\\n');
-            editor.setValue(definition);
-            designerAsserts.parserError('8','value must be a string');
-          });
-
-          it('should fail: only HTTP and HTTPS values are allowed', function () {
-            var definition = [
-              '#%RAML 0.8',
-              '---',
-              'title: My API',
-              'resourceTypes:',
-              '  - hola:',
-              '      put:',
-              '        protocols:',
-              '          - htt'
-            ].join('\\n');
-            editor.setValue(definition);
-            designerAsserts.parserError('8','only HTTP and HTTPS values are allowed');
-          });
-
-        }); // protocols
-
-      }); // put
-
-      describe('delete', function () {
-
-        describe('protocols', function () {
-          it('should fail: RTMethods-protocols property already used protocol', function () {
-            var definition = [
-              '#%RAML 0.8',
-              '---',
-              'title: My API',
-              'resourceTypes:',
-              '  - hola:',
-              '      delete:',
-              '        protocols: []',
-              '        protocols:'
-            ].join('\\n');
-            editor.setValue(definition);
-            designerAsserts.parserError('8','property already used: \'protocols\'');
-          });
-
-          it('should fail: RTMethods-protocol property must be an array', function () {
-            var definition = [
-              '#%RAML 0.8',
-              '---',
-              'title: My API',
-              'resourceTypes:',
-              '  - hola:',
-              '      delete:',
-              '        protocols:'
-            ].join('\\n');
-            editor.setValue(definition);
-            designerAsserts.parserError('7','property must be an array');
-          });
-
-          it('should fail: RTMethods-protocol value must be a string', function () {
-            var definition = [
-              '#%RAML 0.8',
-              '---',
-              'title: My API',
-              'resourceTypes:',
-              '  - hola:',
-              '      delete:',
-              '        protocols:',
-              '          - '
-            ].join('\\n');
-            editor.setValue(definition);
-            designerAsserts.parserError('8','value must be a string');
-          });
-
-          it('should fail: only HTTP and HTTPS values are allowed', function () {
-            var definition = [
-              '#%RAML 0.8',
-              '---',
-              'title: My API',
-              'resourceTypes:',
-              '  - hola:',
-              '      delete:',
-              '        protocols:',
-              '          - htt'
-            ].join('\\n');
-            editor.setValue(definition);
-            designerAsserts.parserError('8','only HTTP and HTTPS values are allowed');
-          });
-
-        }); // protocols
-
-      }); // delete
-
-      describe('head', function () {
-
-        describe('protocols', function () {
-          it('should fail: RTMethods-protocols property already used protocol', function () {
-            var definition = [
-              '#%RAML 0.8',
-              '---',
-              'title: My API',
-              'resourceTypes:',
-              '  - hola:',
-              '      head:',
-              '        protocols: []',
-              '        protocols:'
-            ].join('\\n');
-            editor.setValue(definition);
-            designerAsserts.parserError('8','property already used: \'protocols\'');
-          });
-
-          it('should fail: RTMethods-protocol property must be an array', function () {
-            var definition = [
-              '#%RAML 0.8',
-              '---',
-              'title: My API',
-              'resourceTypes:',
-              '  - hola:',
-              '      head:',
-              '        protocols:'
-            ].join('\\n');
-            editor.setValue(definition);
-            designerAsserts.parserError('7','property must be an array');
-          });
-
-          it('should fail: RTMethods-protocol value must be a string', function () {
-            var definition = [
-              '#%RAML 0.8',
-              '---',
-              'title: My API',
-              'resourceTypes:',
-              '  - hola:',
-              '      head:',
-              '        protocols:',
-              '          - '
-            ].join('\\n');
-            editor.setValue(definition);
-            designerAsserts.parserError('8','value must be a string');
-          });
-
-          it('should fail: only HTTP and HTTPS values are allowed', function () {
-            var definition = [
-              '#%RAML 0.8',
-              '---',
-              'title: My API',
-              'resourceTypes:',
-              '  - hola:',
-              '      head:',
-              '        protocols:',
-              '          - htt'
-            ].join('\\n');
-            editor.setValue(definition);
-            designerAsserts.parserError('8','only HTTP and HTTPS values are allowed');
-          });
-
-        }); // protocols
-
-      }); // head
-
-      describe('patch', function () {
-
-        describe('protocols', function () {
-          it('should fail: RTMethods-protocols property already used protocol', function () {
-            var definition = [
-              '#%RAML 0.8',
-              '---',
-              'title: My API',
-              'resourceTypes:',
-              '  - hola:',
-              '      patch:',
-              '        protocols: []',
-              '        protocols:'
-            ].join('\\n');
-            editor.setValue(definition);
-            designerAsserts.parserError('8','property already used: \'protocols\'');
-          });
-
-          it('should fail: RTMethods-protocol property must be an array', function () {
-            var definition = [
-              '#%RAML 0.8',
-              '---',
-              'title: My API',
-              'resourceTypes:',
-              '  - hola:',
-              '      patch:',
-              '        protocols:'
-            ].join('\\n');
-            editor.setValue(definition);
-            designerAsserts.parserError('7','property must be an array');
-          });
-
-          it('should fail: RTMethods-protocol value must be a string', function () {
-            var definition = [
-              '#%RAML 0.8',
-              '---',
-              'title: My API',
-              'resourceTypes:',
-              '  - hola:',
-              '      patch:',
-              '        protocols:',
-              '          - '
-            ].join('\\n');
-            editor.setValue(definition);
-            designerAsserts.parserError('8','value must be a string');
-          });
-
-          it('should fail: only HTTP and HTTPS values are allowed', function () {
-            var definition = [
-              '#%RAML 0.8',
-              '---',
-              'title: My API',
-              'resourceTypes:',
-              '  - hola:',
-              '      patch:',
-              '        protocols:',
-              '          - htt'
-            ].join('\\n');
-            editor.setValue(definition);
-            designerAsserts.parserError('8','only HTTP and HTTPS values are allowed');
-          });
-
-        }); // protocols
-
-      }); // patch
-
-      describe('options', function () {
-
-        describe('protocols', function () {
-          it('should fail: RTMethods-protocols property already used protocol', function () {
-            var definition = [
-              '#%RAML 0.8',
-              '---',
-              'title: My API',
-              'resourceTypes:',
-              '  - hola:',
-              '      options:',
-              '        protocols: []',
-              '        protocols:'
-            ].join('\\n');
-            editor.setValue(definition);
-            designerAsserts.parserError('8','property already used: \'protocols\'');
-          });
-
-          it('should fail: RTMethods-protocol property must be an array', function () {
-            var definition = [
-              '#%RAML 0.8',
-              '---',
-              'title: My API',
-              'resourceTypes:',
-              '  - hola:',
-              '      options:',
-              '        protocols:'
-            ].join('\\n');
-            editor.setValue(definition);
-            designerAsserts.parserError('7','property must be an array');
-          });
-
-          it('should fail: RTMethods-protocol value must be a string', function () {
-            var definition = [
-              '#%RAML 0.8',
-              '---',
-              'title: My API',
-              'resourceTypes:',
-              '  - hola:',
-              '      options:',
-              '        protocols:',
-              '          - '
-            ].join('\\n');
-            editor.setValue(definition);
-            designerAsserts.parserError('8','value must be a string');
-          });
-
-          it('should fail: only HTTP and HTTPS values are allowed', function () {
-            var definition = [
-              '#%RAML 0.8',
-              '---',
-              'title: My API',
-              'resourceTypes:',
-              '  - hola:',
-              '      options:',
-              '        protocols:',
-              '          - htt'
-            ].join('\\n');
-            editor.setValue(definition);
-            designerAsserts.parserError('8','only HTTP and HTTPS values are allowed');
-          });
-
-        }); // protocols
-
-      }); // options
+      methods.forEach(function(method){
+        it(method+' should fail: only HTTP and HTTPS values are allowed', function () {
+          var definition = [
+            '#%RAML 0.8',
+            '---',
+            'title: My API',
+            'resourceTypes:',
+            '  - hola:',
+            '      '+method+':',
+            '        protocols:',
+            '          - htt'
+          ].join('\\n');
+          editor.setValue(definition);
+          designerAsserts.parserError('8','only HTTP and HTTPS values are allowed');
+        });
+      });
 
     }); // RTMethods
 
