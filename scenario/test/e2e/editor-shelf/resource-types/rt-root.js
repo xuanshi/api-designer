@@ -11,6 +11,13 @@ describe('shelf',function(){
   var namedParamElems = shelf.elemNamedParametersLevel;
   var options = shelf.elemResourceTypeLevel;
 
+  beforeEach(function(){
+    editor.setValue('');
+    expect(editor.getLine(1)).toEqual('');
+    designerAsserts.shelfElements(shelf.elemRamlVersion);
+    expect(editor.IsParserErrorDisplayed()).toBe(false);
+  });
+
   describe('resourceTypes elements',function(){
     it('resource shelf elements by group', function(){
       var definition = [
