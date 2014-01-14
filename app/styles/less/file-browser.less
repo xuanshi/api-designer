@@ -33,6 +33,7 @@
       cursor: pointer;
       line-height: 18px;
       white-space: nowrap;
+      position: relative;
 
 
       &:not(.currentfile):hover {
@@ -52,6 +53,24 @@
 
       &.dirty::before {
         visibility: visible;
+      }
+
+      i {
+        float: right;
+        margin-right: 5px;
+        font-size: 15px;
+        line-height: 18px;
+      }
+
+      raml-editor-context-menu {
+        ul {
+          position: absolute;
+          left: 100px;
+          top: 20px;
+          border: 1px solid #ccc;
+          list-style: none;
+          z-index: 2;
+        }
       }
     }
   }

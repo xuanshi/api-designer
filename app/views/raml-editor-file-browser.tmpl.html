@@ -7,6 +7,8 @@
         ng-click="fileBrowser.selectFile(file)"
         ng-class="{currentfile: fileBrowser.selectedFile === file, dirty: file.dirty}">
       {{file.name}}
+      <i class="icon icon-cog" ng-click="showMenu = !showMenu"></i>
+      <raml-editor-context-menu file="file" active="showMenu"></raml-editor-context-menu>
     </li>
   </ul>
 </div>

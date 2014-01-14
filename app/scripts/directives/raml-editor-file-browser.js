@@ -49,6 +49,10 @@
         }
       };
 
+      $scope.clickedCog = function() {
+        console.log('clicked cog');
+      };
+
       $window.addEventListener('keydown', saveListener);
 
       $scope.$on('$destroy', function() {
