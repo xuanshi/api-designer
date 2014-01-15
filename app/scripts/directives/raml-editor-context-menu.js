@@ -5,9 +5,9 @@
 
     function ContextMenu(file) {
       var saveAction = {
-        label: "Save",
+        label: 'Save',
         execute: function() {
-          ramlRepository.saveFile(file)
+          ramlRepository.saveFile(file);
         }
       };
 
@@ -15,6 +15,7 @@
     }
 
     function link(scope) {
+      /*jshint newcap: false */
       scope.actions = ContextMenu(scope.file);
     }
 
