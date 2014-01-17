@@ -1,4 +1,5 @@
 @import "utils.less";
+@import "data-uris.less";
 
 /* CodeMirror Overrides */
 
@@ -105,14 +106,10 @@ body.light {
     .box-shadow(none);
   }
 
-  div[role=tab-box],
-  div[role=tab].active div[role=tab-box] {
-    background-color: white;
-    border: 1px solid #555;
-  }
-
-  div[role=tab].active {
+  div[role=tab] {
     .text-shadow(#eee 0 1px);
+    background-color: white;
+    border-image-source: url(@tab-image-light);
   }
 
   div[role=code] {
