@@ -36,7 +36,10 @@
     </div>
 
     <div role="tabs">
-      <div role="tab" class="active"><span ng-show="canSave()">*&nbsp;</span>{{file.name}}<div role="tab-box"></div></div>
+      <div role="tab">
+        <span ng-show="canSave()">*</span>
+        <span>{{file.name}}</span>
+      </div>
     </div>
 
     <div role="actions">
