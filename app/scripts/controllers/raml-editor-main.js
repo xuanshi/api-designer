@@ -143,11 +143,15 @@ angular.module('ramlEditorApp')
     };
 
     $scope.getSelectedFileAbsolutePath = function getSelectedFileAbsolutePath() {
+      if(!$scope.fileBrowser) {
+        return;
+      }
+
       var selectedFile = $scope.fileBrowser.selectedFile;
       var absolutePath = '';
 
       if (selectedFile) {
-        absolutePath = selectedFile.path + (selectedFile.path.slice(-1) === '/' ? '' : '/') + selectedFile.name;
+        absolutePath = selectedFile.path;
         if (selectedFile.dirty) {
           absolutePath = '* ' + absolutePath;
         }
