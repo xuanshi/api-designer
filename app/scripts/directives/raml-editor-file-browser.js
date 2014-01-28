@@ -79,12 +79,8 @@
         contextMenu = cm;
       };
 
-      this.showContextMenu = function(event, file) {
-        contextMenu.open(event, file);
-      };
-
-      this.contextMenuOpenedFor = function(file) {
-        return contextMenu && contextMenu.file === file;
+      this.openContextMenu = function(event, actions, onClose) {
+        contextMenu.open(event, actions, onClose);
       };
 
       var saveListener = function(e) {

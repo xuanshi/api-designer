@@ -1,33 +1,7 @@
-/* jshint newcap: false */
 (function() {
   'use strict';
 
-  angular.module('ramlEditorApp').directive('ramlEditorContextMenu', function($window, ramlRepository, ramlEditorRemoveFilePrompt, ramlEditorFilenamePrompt, scroll) {
-    function Actions(directory, file) {
-      return [
-        {
-          label: 'Save',
-          execute: function() {
-            ramlRepository.saveFile(file);
-          }
-        },
-        {
-          label: 'Delete',
-          execute: function() {
-            ramlEditorRemoveFilePrompt.open(directory, file);
-          }
-        },
-        {
-          label: 'Rename',
-          execute: function() {
-            ramlEditorFilenamePrompt.open(directory, file.name).then(function(filename) {
-              ramlRepository.renameFile(file, filename);
-            });
-          }
-        }
-      ];
-    }
-
+  angular.module('ramlEditorApp').directive('ramlEditorContextMenu', function($window, scroll) {
     function outOfWindow(el) {
       var rect = el.getBoundingClientRect();
       return !(rect.top >= 0 &&
@@ -40,6 +14,8 @@
       restrict: 'E',
       templateUrl: 'views/raml-editor-context-menu.tmpl.html',
       link: function(scope, element) {
+        var onClose;
+
         function positionMenu(element, offsetTarget) {
           var left = offsetTarget.offsetLeft + 0.5 * offsetTarget.offsetWidth,
               top = offsetTarget.offsetTop + 0.5 * offsetTarget.offsetHeight;
@@ -58,12 +34,15 @@
         function close() {
           scroll.enable();
           scope.$apply(function() {
-            delete contextMenuController.file;
             scope.opened = false;
 
             $window.removeEventListener('click', close);
             $window.removeEventListener('keydown', closeOnEscape);
           });
+
+          if (onClose) {
+            scope.$apply(onClose);
+          }
         }
 
         function closeOnEscape(e) {
@@ -74,12 +53,12 @@
         }
 
         var contextMenuController = {
-          open: function(event, file) {
-            scroll.disable();
-            this.file = file;
-            scope.actions = Actions(scope.homeDirectory, file);
-
+          open: function(event, actions, closeCallback) {
             event.stopPropagation();
+            scroll.disable();
+            scope.actions = actions;
+            onClose = closeCallback;
+
             positionMenu(element, event.target);
             $window.addEventListener('click', close);
             $window.addEventListener('keydown', closeOnEscape);

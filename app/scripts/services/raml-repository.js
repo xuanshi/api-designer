@@ -29,6 +29,7 @@
         var strippedPath = path.substring(0, path.length - 1);
         this.path = path;
         this.name = strippedPath.slice(strippedPath.lastIndexOf('/') + 1);
+        this.name = this.name || '/';
         this.meta = meta;
 
         var separated = { folder: [], file: [] };
