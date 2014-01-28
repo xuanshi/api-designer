@@ -7,7 +7,7 @@
       $scope.fileBrowser = this;
 
       function promptWhenFileListIsEmpty() {
-        ramlEditorFilenamePrompt.open($scope.homeDirectory).then(function(filename) {
+        ramlEditorFilenamePrompt.fileName($scope.homeDirectory).then(function(filename) {
           $scope.homeDirectory.createFile(filename);
         });
       }

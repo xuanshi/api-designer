@@ -7,7 +7,7 @@
         {
           label: 'New File',
           execute: function() {
-            ramlEditorFilenamePrompt.open(directory).then(function(filename) {
+            ramlEditorFilenamePrompt.fileName(directory).then(function(filename) {
               directory.createFile(filename);
             });
           }

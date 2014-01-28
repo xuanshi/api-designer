@@ -19,7 +19,7 @@
         {
           label: 'Rename',
           execute: function() {
-            ramlEditorFilenamePrompt.open(directory, file.name).then(function(filename) {
+            ramlEditorFilenamePrompt.fileName(directory, file.name).then(function(filename) {
               ramlRepository.renameFile(file, filename);
             });
           }

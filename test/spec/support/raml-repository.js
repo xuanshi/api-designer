@@ -5,14 +5,15 @@ angular.module('testFs', [])
     var service = {};
 
     service.files = [];
-    service.directory = {
-      path: '/',
+    service.directories = [{
+      path: '/OMG/',
+      name: 'OMG',
       createFile: function() {}
-    };
+    }];
 
     service.getDirectory = function () {
-      service.directory.files = service.files;
-      return $q.when(service.directory);
+      service.directories[0].files = service.files;
+      return $q.when(service.directories[0]);
     };
 
     service.loadFile = function (file) {

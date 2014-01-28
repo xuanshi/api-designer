@@ -1,43 +1,56 @@
 (function() {
   'use strict';
 
-  function generateFileName(files) {
-    var currentMax = Math.max.apply(undefined, files.map(function(file) {
-      var match = file.name.match(/Untitled-(\d+)\.raml/);
-      return match ? match[1] : 0;
-    }).concat(0));
+  function nameGenerator(prefix, extension) {
+    extension = extension || '';
+    if (extension !== '' && extension.indexOf('.') !== 0) {
+      extension = '.' + extension;
+    }
 
-    return 'Untitled-' + (currentMax + 1) + '.raml';
+    return function nextToken(items) {
+      var currentMax = Math.max.apply(undefined, items.map(function(item) {
+        var match = new RegExp(prefix + '(\\d)' + extension).exec(item.name);
+        return match ? match[1] : 0;
+      }).concat(0));
+
+      return prefix + (currentMax + 1) + extension;
+    };
   }
 
+  var fileNameGenerator = nameGenerator('Untitled-', '.raml');
+  var directoryNameGenerator = nameGenerator('Untitled-Folder-');
+
   angular.module('ramlEditorApp').factory('ramlEditorFilenamePrompt', function($window, $q) {
-    return {
-      open: function(directory, suggestedFileName) {
-        var deferred = $q.defer();
-        suggestedFileName = suggestedFileName || generateFileName(directory.files);
-        var message = 'Choose a name:';
-        if (directory.files.length === 0) {
-          message = 'The file browser is empty. Create a new file:';
-        }
+    function open(items, nameGenerator, suggestedName) {
+      var deferred = $q.defer();
+      suggestedName = suggestedName || nameGenerator(items);
+      var name = $window.prompt('Choose a name:', suggestedName);
 
-        var filename = $window.prompt(message, suggestedFileName);
+      if (name) {
+        var nameAlreadyTaken = items.some(function(item) {
+          return item.name.toLowerCase() === name.toLowerCase();
+        });
 
-        if (filename) {
-          var filenameAlreadyTaken = directory.files.some(function(file) {
-            return file.name.toLowerCase() === filename.toLowerCase();
-          });
-
-          if (filenameAlreadyTaken) {
-            $window.alert('That filename is already taken.');
-            deferred.reject();
-          } else {
-            deferred.resolve(filename);
-          }
-        } else {
+        if (nameAlreadyTaken) {
+          $window.alert('That name is already taken.');
           deferred.reject();
+        } else {
+          deferred.resolve(name);
         }
+      } else {
+        deferred.reject();
+      }
 
-        return deferred.promise;
+      return deferred.promise;
+    }
+
+    return {
+      fileName: function(directory, suggestedFileName) {
+        return open(directory.files, fileNameGenerator, suggestedFileName);
+      },
+
+      directoryName: function(directory) {
+        return open(directory.directories, directoryNameGenerator);
       }
     };
   });
