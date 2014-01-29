@@ -209,6 +209,39 @@ describe('ramlEditorFileBrowser', function() {
           });
         });
       });
+
+      describe('creating a folder', function() {
+        var createItem, createFolderStub, promptSpy, filenamePromptStub;
+
+        beforeEach(function() {
+          iconToClick.dispatchEvent(events.click());
+          inject(function(ramlRepository, ramlEditorFilenamePrompt) {
+            createFolderStub = sandbox.stub(ramlRepository.directories[0], 'createDirectory');
+            filenamePromptStub = sandbox.stub(ramlEditorFilenamePrompt, 'directoryName');
+          });
+          promptSpy = sandbox.stub(window, 'prompt');
+
+          createItem = contextMenuItemNamed('New Folder');
+        });
+
+        it('opens the filename prompt', function() {
+          filenamePromptStub.returns(promise.stub());
+          createItem.dispatchEvent(events.click());
+
+          filenamePromptStub.should.have.been.calledWith(scope.homeDirectory);
+        });
+
+        describe('upon success', function() {
+          beforeEach(function() {
+            filenamePromptStub.returns(promise.resolved('folder'));
+            createItem.dispatchEvent(events.click());
+          });
+
+          it('creates a folder in the current folder', function() {
+            createFolderStub.should.have.been.calledWith('folder');
+          });
+        });
+      });
     });
 
     describe('for a file', function() {

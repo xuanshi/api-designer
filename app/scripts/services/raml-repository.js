@@ -51,11 +51,20 @@
       }
 
       RamlDirectory.prototype.createFile = function (name) {
-        var file = service.createFile(name);
+        var file = service.createFile(this.path + name);
         this.files.push(file);
 
         return file;
       };
+
+      RamlDirectory.prototype.createDirectory = function (name) {
+        var parentDirectory = this;
+
+        return service.createFolder(this.path + name).then(function(directory) {
+          parentDirectory.directories.push(directory);
+        });
+      };
+
 
       RamlDirectory.prototype.removeFile = function (file) {
         return service.removeFile(file).then(function() {
@@ -129,13 +138,21 @@
         return fileSystem.remove(file.path).then(modifyFile, handleErrorFor(file));
       };
 
-      service.createFile = function (name) {
-        var path = defaultPath + name;
+      service.createFile = function (path) {
         var file = new RamlFile(path, ramlSnippets.getEmptyRaml());
         $rootScope.$broadcast('event:raml-editor-file-created', file);
 
         return file;
       };
+
+      service.createFolder = function (path) {
+        function createDirectory() {
+          return new RamlDirectory(path);
+        }
+
+        return fileSystem.createFolder(path).then(createDirectory);
+      };
+
 
       return service;
     });

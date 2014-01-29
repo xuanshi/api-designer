@@ -42,6 +42,7 @@
 
           if (onClose) {
             scope.$apply(onClose);
+            onClose = undefined;
           }
         }
 
@@ -57,6 +58,11 @@
             event.stopPropagation();
             scroll.disable();
             scope.actions = actions;
+
+            // on close and stpp propagation
+            if (onClose) {
+              onClose();
+            }
             onClose = closeCallback;
 
             positionMenu(element, event.target);

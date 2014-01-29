@@ -5,7 +5,7 @@
     resolved: function(value) {
       return {
         then: function(success) {
-          success(value);
+          return promise.resolved(success(value));
         }
       };
     },
@@ -13,7 +13,7 @@
       return {
         then: function(success, failure) {
           if (typeof failure === 'function') {
-            failure(error);
+            return promise.rejected(failure(error));
           }
         }
       };

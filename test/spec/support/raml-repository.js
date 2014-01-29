@@ -8,7 +8,8 @@ angular.module('testFs', [])
     service.directories = [{
       path: '/OMG/',
       name: 'OMG',
-      createFile: function() {}
+      createFile: function() {},
+      createDirectory: function() {}
     }];
 
     service.getDirectory = function () {
