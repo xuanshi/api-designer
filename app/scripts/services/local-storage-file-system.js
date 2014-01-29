@@ -41,7 +41,7 @@ angular.module('fs')
       }
     };
   })
-  .factory('localStorageFileSystem', function ($q, $timeout, localStorageHelper, FOLDER) {
+  .factory('localStorageFileSystem', function ($q, localStorageHelper, FOLDER) {
     function fileNotFoundMessage(path) {
       return 'file with path="' + path + '" does not exist';
     }
@@ -87,7 +87,6 @@ angular.module('fs')
      * * isFolder: A flag that indicates whether is a folder or file.
      */
     var service = {};
-    var delay   = 500;
 
     function validatePath(path) {
       if (path.indexOf('/') !== 0) {
@@ -135,28 +134,25 @@ angular.module('fs')
      */
     service.directory = function (path) {
       var deferred = $q.defer();
+      var isValidPath = validatePath(path);
 
-      $timeout(function () {
-        var isValidPath = validatePath(path);
+      if (!isValidPath.valid) {
+        deferred.reject(isValidPath.reason);
+        return deferred.promise;
+      }
 
-        if (!isValidPath.valid) {
-          deferred.reject(isValidPath.reason);
-          return deferred.promise;
-        }
+      if(!localStorageHelper.has('/')) {
+        localStorageHelper.set(path, {
+          path: '/',
+          name: '/',
+          type: 'folder',
+          meta: {
+            'created': Math.round(new Date().getTime()/1000.0)
+          }
+        });
+      }
 
-        if(!localStorageHelper.has('/')) {
-          localStorageHelper.set(path, {
-              path: '/',
-              name: '/',
-              type: 'folder',
-              meta: {
-                'created': Math.round(new Date().getTime()/1000.0)
-              }
-            });
-        }
-
-        deferred.resolve(findFolder(path));
-      }, delay);
+      deferred.resolve(findFolder(path));
 
       return deferred.promise;
     };
@@ -166,41 +162,37 @@ angular.module('fs')
      */
     service.save = function (path, content) {
       var deferred = $q.defer();
+      var name = extractNameFromPath(path);
+      var entry = localStorageHelper.get(path);
 
-      $timeout(function () {
-        var name = extractNameFromPath(path);
-        var entry = localStorageHelper.get(path);
+      if(!isValidParent(path)){
+        deferred.reject('Parent folder does not exists');
+        return deferred.promise;
+      }
 
-        if(!isValidParent(path)){
-          deferred.reject('Parent folder does not exists');
+      var file = {};
+      if (entry) {
+        if (entry.type === FOLDER) {
+          deferred.reject('file has the same name as a folder');
           return deferred.promise;
         }
-
-        var file = {};
-        if (entry) {
-          if (entry.type === FOLDER) {
-            deferred.reject('file has the same name as a folder');
-            return deferred.promise;
+        entry.content = content;
+        entry.meta.lastUpdated = Math.round(new Date().getTime()/1000.0);
+        file = entry;
+      } else {
+        file = {
+          path: path,
+          name: name,
+          content: content,
+          type: 'file',
+          meta: {
+            'created': Math.round(new Date().getTime()/1000.0)
           }
-          entry.content = content;
-          entry.meta.lastUpdated = Math.round(new Date().getTime()/1000.0);
-          file = entry;
-        } else {
-          file = {
-            path: path,
-            name: name,
-            content: content,
-            type: 'file',
-            meta: {
-              'created': Math.round(new Date().getTime()/1000.0)
-            }
-          };
-        }
+        };
+      }
 
-        localStorageHelper.set(path, file);
-        deferred.resolve();
-
-      }, delay);
+      localStorageHelper.set(path, file);
+      deferred.resolve();
 
       return deferred.promise;
     };
@@ -228,20 +220,16 @@ angular.module('fs')
         return deferred.promise;
       }
 
-      $timeout(function () {
+      localStorageHelper.set(path, {
+        path: path,
+        name: extractNameFromPath(path),
+        type: 'folder',
+        meta: {
+          'created': Math.round(new Date().getTime()/1000.0)
+        }
+      });
 
-        localStorageHelper.set(path, {
-            path: path,
-            name: extractNameFromPath(path),
-            type: 'folder',
-            meta: {
-              'created': Math.round(new Date().getTime()/1000.0)
-            }
-          });
-
-        deferred.resolve();
-      }, delay);
-
+      deferred.resolve();
 
       return deferred.promise;
     };
@@ -251,17 +239,13 @@ angular.module('fs')
      */
     service.load = function (path) {
       var deferred = $q.defer();
+      var entry = localStorageHelper.get(path);
 
-      $timeout(function () {
-
-        var entry = localStorageHelper.get(path);
-        if(entry && entry.type === 'file') {
-          deferred.resolve(localStorageHelper.get(path).content);
-        } else {
-          deferred.reject(fileNotFoundMessage(path));
-        }
-
-      }, delay);
+      if(entry && entry.type === 'file') {
+        deferred.resolve(localStorageHelper.get(path).content);
+      } else {
+        deferred.reject(fileNotFoundMessage(path));
+      }
 
       return deferred.promise;
     };
@@ -271,20 +255,15 @@ angular.module('fs')
      */
     service.remove = function (path) {
       var deferred = $q.defer();
+      var entry = localStorageHelper.get(path);
 
-      $timeout(function () {
-        var entry = localStorageHelper.get(path);
+      if(entry && entry.type === FOLDER && hasChildrens(path)) {
+        deferred.reject('folder not empty');
+        return deferred.promise;
+      }
 
-        if(entry &&
-           entry.type === FOLDER &&
-           hasChildrens(path)) {
-          deferred.reject('folder not empty');
-          return deferred.promise;
-        }
-
-        localStorageHelper.remove(path);
-        deferred.resolve();
-      }, delay);
+      localStorageHelper.remove(path);
+      deferred.resolve();
 
       return deferred.promise;
     };
@@ -294,53 +273,50 @@ angular.module('fs')
      */
     service.rename = function (source, destination) {
       var deferred = $q.defer();
+      var sourceEntry = localStorageHelper.get(source);
 
-      $timeout(function(){
-        var sourceEntry = localStorageHelper.get(source);
+      if(!sourceEntry) {
+        deferred.reject('Source file or folder does not exists.');
+        return deferred.promise;
+      }
 
-        if(!sourceEntry) {
-          deferred.reject('Source file or folder does not exists.');
-          return deferred.promise;
-        }
+      var destinationEntry = localStorageHelper.get(destination);
+      if(destinationEntry) {
+        deferred.reject('File or folder already exists.');
+        return deferred.promise;
+      }
 
-        var destinationEntry = localStorageHelper.get(destination);
-        if(destinationEntry) {
-          deferred.reject('File or folder already exists.');
-          return deferred.promise;
-        }
+      if(!isValidParent(destination)) {
+        deferred.reject('Destination folder does not exist.');
+        return deferred.promise;
+      }
 
-        if(!isValidParent(destination)) {
-          deferred.reject('Destination folder does not exist.');
-          return deferred.promise;
-        }
+      sourceEntry.path = destination;
+      sourceEntry.name = extractNameFromPath(destination);
 
-        sourceEntry.path = destination;
-        sourceEntry.name = extractNameFromPath(destination);
+      localStorageHelper.remove(destination);
+      localStorageHelper.remove(source);
+      localStorageHelper.set(destination, sourceEntry);
 
-        localStorageHelper.remove(destination);
-        localStorageHelper.remove(source);
-        localStorageHelper.set(destination, sourceEntry);
+      if(sourceEntry.type === FOLDER) {
+        // if(!isValidPath(destination)) {
+        //   deferred.reject('Destination is not a valid folder');
+        //   return deferred.promise;
+        // }
+        //move all child items
+        localStorageHelper.forEach(function (entry) {
+          if (entry.path.toLowerCase() !== source.toLowerCase() &&
+              entry.path.indexOf(source) === 0) {
 
-        if(sourceEntry.type === FOLDER) {
-          // if(!isValidPath(destination)) {
-          //   deferred.reject('Destination is not a valid folder');
-          //   return deferred.promise;
-          // }
-          //move all child items
-          localStorageHelper.forEach(function (entry) {
-            if (entry.path.toLowerCase() !== source.toLowerCase() &&
-                entry.path.indexOf(source) === 0) {
-              
-              var newPath = destination + entry.path.substring(source.length);
-              localStorageHelper.remove(entry.path);
-              entry.path = newPath;
-              localStorageHelper.set(newPath, entry);
-            }
-          });
-        }
+            var newPath = destination + entry.path.substring(source.length);
+            localStorageHelper.remove(entry.path);
+            entry.path = newPath;
+            localStorageHelper.set(newPath, entry);
+          }
+        });
+      }
 
-        deferred.resolve();
-      }, delay);
+      deferred.resolve();
 
       return deferred.promise;
     };
