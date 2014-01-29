@@ -108,8 +108,8 @@
       };
 
       service.renameFile = function(file, newName) {
-        newName = newName || file.name;
         var newPath = file.path.replace(file.name, newName);
+        var promise = file.persisted ? fileSystem.rename(file.path, newPath) : $q.when(file);
 
         function modifyFile() {
           file.name = newName;
@@ -118,7 +118,7 @@
           return file;
         }
 
-        return fileSystem.rename(file.path, newPath).then(modifyFile, handleErrorFor(file));
+        return promise.then(modifyFile, handleErrorFor(file));
       };
 
       service.loadFile = function (file) {
@@ -147,6 +147,9 @@
 
       service.createFile = function (path) {
         var file = new RamlFile(path, ramlSnippets.getEmptyRaml());
+        if (file.extension !== 'raml') {
+          file.contents = '';
+        }
         $rootScope.$broadcast('event:raml-editor-file-created', file);
 
         return file;
