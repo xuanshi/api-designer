@@ -1,13 +1,13 @@
 (function() {
   'use strict';
 
-  function nameGenerator(prefix, extension) {
+  function nameGenerator(items, prefix, extension) {
     extension = extension || '';
     if (extension !== '' && extension.indexOf('.') !== 0) {
       extension = '.' + extension;
     }
 
-    return function nextToken(items) {
+    return function nextToken() {
       var currentMax = Math.max.apply(undefined, items.map(function(item) {
         var match = new RegExp(prefix + '(\\d)' + extension).exec(item.name);
         return match ? match[1] : 0;
@@ -17,21 +17,14 @@
     };
   }
 
-  var fileNameGenerator = nameGenerator('Untitled-', '.raml');
-  var directoryNameGenerator = nameGenerator('Untitled-Folder-');
-
   angular.module('ramlEditorApp').factory('ramlEditorFilenamePrompt', function($window, $q) {
-    function open(items, nameGenerator, suggestedName) {
+    function open(directory, nameGenerator, suggestedName) {
       var deferred = $q.defer();
-      suggestedName = suggestedName || nameGenerator(items);
+      suggestedName = suggestedName || nameGenerator();
       var name = $window.prompt('Choose a name:', suggestedName);
 
       if (name) {
-        var nameAlreadyTaken = items.some(function(item) {
-          return item.name.toLowerCase() === name.toLowerCase();
-        });
-
-        if (nameAlreadyTaken) {
+        if (directory.hasFileOrFolderNamed(name)) {
           $window.alert('That name is already taken.');
           deferred.reject();
         } else {
@@ -46,11 +39,13 @@
 
     return {
       fileName: function(directory, suggestedFileName) {
-        return open(directory.files, fileNameGenerator, suggestedFileName);
+        var generator = nameGenerator(directory.files, 'Untitled-', '.raml');
+        return open(directory, generator, suggestedFileName);
       },
 
       directoryName: function(directory) {
-        return open(directory.directories, directoryNameGenerator);
+        var generator = nameGenerator(directory.directories, 'Untitled-Folder-');
+        return open(directory, generator);
       }
     };
   });

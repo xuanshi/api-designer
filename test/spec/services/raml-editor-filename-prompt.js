@@ -1,20 +1,9 @@
 describe('ramlEditorFilenamePrompt', function() {
   'use strict';
 
-  var sandbox, ramlRepository, newFilePrompt, digest;
+  var sandbox, ramlRepository, newFilePrompt, digest, directory;
 
-  function createMockFile(name, options) {
-    options = options || {};
-
-    return {
-      name: name,
-      dirty: !!options.dirty,
-      contents: options.contents
-    };
-  }
-
-  angular.module('fileBrowserTest', ['ramlEditorApp', 'testFs']);
-  beforeEach(module('fileBrowserTest'));
+  beforeEach(module('ramlEditorApp'));
 
   beforeEach(inject(function($rootScope, $injector, ramlEditorFilenamePrompt) {
     digest = function() { $rootScope.$digest(); };
@@ -24,8 +13,17 @@ describe('ramlEditorFilenamePrompt', function() {
     newFilePrompt = ramlEditorFilenamePrompt;
   }));
 
+  beforeEach(function(done) {
+    ramlRepository.getDirectory().then(function(fetched) {
+      directory = fetched;
+      done();
+    });
+    digest();
+  });
+
   afterEach(function() {
-    ramlRepository = newFilePrompt = undefined;
+    ramlRepository = newFilePrompt = directory = undefined;
+    localStorage.clear();
     sandbox.restore();
   });
 
@@ -34,17 +32,16 @@ describe('ramlEditorFilenamePrompt', function() {
 
     beforeEach(function() {
       promptSpy = sandbox.stub(window, 'prompt');
-      ramlRepository.files = [createMockFile('file1'), createMockFile('file2')];
     });
 
     it('prompts user for filename', function() {
-      newFilePrompt.fileName(ramlRepository);
+      newFilePrompt.fileName(directory);
 
       promptSpy.should.have.been.calledWith('Choose a name:');
     });
 
     it('allows the suggested name to be overridden', function() {
-      newFilePrompt.fileName(ramlRepository, 'MyName.raml');
+      newFilePrompt.fileName(directory, 'MyName.raml');
 
       promptSpy.should.have.been.calledWith('Choose a name:', 'MyName.raml');
     });
@@ -55,7 +52,7 @@ describe('ramlEditorFilenamePrompt', function() {
       });
 
       it('resolves the promise with the chosen file name', function(done) {
-        var promise = newFilePrompt.fileName(ramlRepository);
+        var promise = newFilePrompt.fileName(directory);
 
         promise.then(function(chosenName) {
           chosenName.should.equal('MyFile.raml');
@@ -69,9 +66,9 @@ describe('ramlEditorFilenamePrompt', function() {
 
         beforeEach(function() {
           alertSpy = sandbox.stub(window, 'alert');
-          ramlRepository.files.push(createMockFile('MYFILE.raml', { contents: 'my content' }));
+          directory.createFile('MYFILE.raml');
 
-          promise = newFilePrompt.fileName(ramlRepository);
+          promise = newFilePrompt.fileName(directory);
           digest();
         });
 
@@ -94,7 +91,7 @@ describe('ramlEditorFilenamePrompt', function() {
       beforeEach(function() {
         promptSpy.returns(null);
 
-        promise = newFilePrompt.fileName(ramlRepository);
+        promise = newFilePrompt.fileName(directory);
         digest();
       });
 
@@ -108,36 +105,38 @@ describe('ramlEditorFilenamePrompt', function() {
 
     describe('suggested filename', function() {
       it('defaults to Untitled-1.raml first', function() {
-        newFilePrompt.fileName(ramlRepository);
+        newFilePrompt.fileName(directory);
         promptSpy.should.have.been.calledWith(sinon.match.any, 'Untitled-1.raml');
       });
 
       it('does not increment the filename if you cancel', function() {
         promptSpy.returns(null);
-        newFilePrompt.fileName(ramlRepository);
-        newFilePrompt.fileName(ramlRepository);
+        newFilePrompt.fileName(directory);
+        newFilePrompt.fileName(directory);
         promptSpy.should.have.been.calledWith(sinon.match.any, 'Untitled-1.raml');
       });
 
       describe('with an existing Untitled-1.raml', function() {
         beforeEach(function() {
-          ramlRepository.files = [createMockFile('Untitled-1.raml')];
+          directory.createFile('Untitled-1.raml');
         });
 
         it('defaults to Untitled-2.raml second', function() {
           promptSpy.returns('the-name-i-actually-give-the-second-file.raml');
-          newFilePrompt.fileName(ramlRepository);
+          newFilePrompt.fileName(directory);
           promptSpy.should.have.been.calledWith(sinon.match.any, 'Untitled-2.raml');
         });
       });
 
       describe('given an existing Untitled-6.raml', function() {
         beforeEach(function() {
-          ramlRepository.files = [createMockFile('file2'), createMockFile('Untitled-6.raml'), createMockFile('Zebras')];
+          directory.createFile('file2');
+          directory.createFile('Untitled-6.raml');
+          directory.createFile('Zebras');
         });
 
         it('it defaults to Untitled-7.raml', function() {
-          newFilePrompt.fileName(ramlRepository);
+          newFilePrompt.fileName(directory);
           promptSpy.should.have.been.calledWith(sinon.match.any, 'Untitled-7.raml');
         });
       });
@@ -149,36 +148,32 @@ describe('ramlEditorFilenamePrompt', function() {
 
     beforeEach(function() {
       promptSpy = sandbox.stub(window, 'prompt');
-      ramlRepository.files = [createMockFile('file1'), createMockFile('file2')];
     });
 
     describe('suggested filename', function() {
       it('defaults to Untitled-Folder-1 first', function() {
-        newFilePrompt.directoryName(ramlRepository);
+        newFilePrompt.directoryName(directory);
         promptSpy.should.have.been.calledWith(sinon.match.any, 'Untitled-Folder-1');
       });
 
       it('does not increment the filename if you cancel', function() {
         promptSpy.returns(null);
-        newFilePrompt.directoryName(ramlRepository);
-        newFilePrompt.directoryName(ramlRepository);
+        newFilePrompt.directoryName(directory);
+        newFilePrompt.directoryName(directory);
         promptSpy.should.have.been.calledWith(sinon.match.any, 'Untitled-Folder-1');
       });
 
       describe('with an existing Untitled-Folder-1', function() {
-        var oldDirectoryName;
-        beforeEach(function() {
-          oldDirectoryName = ramlRepository.directories[0].name;
-          ramlRepository.directories[0].name = 'Untitled-Folder-1';
-        });
-
-        afterEach(function() {
-          ramlRepository.directories[0].name = oldDirectoryName;
+        beforeEach(function(done) {
+          directory.createDirectory('Untitled-Folder-1').then(function() {
+            done();
+          });
+          digest();
         });
 
         it('defaults to Untitled-Folder-2 second', function() {
           promptSpy.returns('the-name-i-actually-give-the-second-file.raml');
-          newFilePrompt.directoryName(ramlRepository);
+          newFilePrompt.directoryName(directory);
           promptSpy.should.have.been.calledWith(sinon.match.any, 'Untitled-Folder-2');
         });
       });
@@ -186,11 +181,13 @@ describe('ramlEditorFilenamePrompt', function() {
       describe('when the name is already taken (case-insensitive)', function() {
         var alertSpy, promise;
 
-        beforeEach(function() {
+        beforeEach(function(done) {
           alertSpy = sandbox.stub(window, 'alert');
-          promptSpy.returns(ramlRepository.directories[0].name);
-
-          promise = newFilePrompt.directoryName(ramlRepository);
+          directory.createDirectory('MyDirectory').then(function() {
+            promptSpy.returns('MyDirectory');
+            promise = newFilePrompt.directoryName(directory);
+            done();
+          });
           digest();
         });
 
@@ -199,10 +196,7 @@ describe('ramlEditorFilenamePrompt', function() {
         });
 
         it('rejects the promise', function(done) {
-          promise.then(undefined, function() {
-            done();
-          });
-          digest();
+          promise.then(undefined, done);
         });
       });
     });

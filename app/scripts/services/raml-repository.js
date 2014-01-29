@@ -65,7 +65,6 @@
         });
       };
 
-
       RamlDirectory.prototype.removeFile = function (file) {
         return service.removeFile(file).then(function() {
           var index = this.files.indexOf(file);
@@ -73,6 +72,14 @@
             this.files.splice(index, 1);
           }
         }.bind(this));
+      };
+
+      RamlDirectory.prototype.hasFileOrFolderNamed = function(name) {
+        function named(item) {
+          return item.name.toLowerCase() === name.toLowerCase();
+        }
+
+        return this.directories.some(named) || this.files.some(named);
       };
 
       function handleErrorFor(file) {
