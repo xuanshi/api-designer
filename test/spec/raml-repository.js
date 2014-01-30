@@ -283,35 +283,12 @@ describe('RAML Repository', function () {
       file = ramlRepository.createFile('/untitled.raml');
     }));
 
-    it('should return a new file with snippet content', function () {
-      file.path.should.be.equal('/untitled.raml');
-      file.name.should.be.equal('untitled.raml');
+    it('defaults the content', function () {
       file.contents.should.be.equal(snippet);
-      file.dirty.should.be.true;
-      file.persisted.should.be.false;
     });
 
     it('emits an event indicating that a file has been added', function() {
       broadcastSpy.should.have.been.calledWith('event:raml-editor-file-created', sinon.match({ name: 'untitled.raml' }));
     });
-  });
-
-  describe('createFolder', function () {
-    var fileSystemMock, eventualFolder;
-
-    beforeEach(function() {
-      fileSystemMock = sandbox.stub(fileSystem, 'createFolder');
-      fileSystemMock.returns(promise.resolved());
-
-      eventualFolder = ramlRepository.createFolder('/folder');
-    });
-
-    it('should return a new file with snippet content', inject(function ($rootScope) {
-      eventualFolder.then(function(folder) {
-        folder.path.should.be.equal('/folder/');
-        folder.name.should.be.equal('folder');
-      });
-      $rootScope.$digest();
-    }));
   });
 });

@@ -24,7 +24,7 @@
       var name = $window.prompt('Choose a name:', suggestedName);
 
       if (name) {
-        if (folder.hasFileOrFolderNamed(name)) {
+        if (folder.fileOrFolderNamed(name)) {
           $window.alert('That name is already taken.');
           deferred.reject();
         } else {

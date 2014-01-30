@@ -2,19 +2,8 @@
   'use strict';
 
   var FILE_EXTENSION_EXTRACTOR = /.*\.(.*)$/;
-  function RamlFile (path, contents, options) {
-    options = options || {};
-
-    this.path = path;
-    this.name = path.slice(path.lastIndexOf('/') + 1);
-    var extensionMatch = FILE_EXTENSION_EXTRACTOR.exec(this.name);
-    if (extensionMatch) {
-      this.extension = extensionMatch[1];
-    }
-
-    this.contents = contents;
-    this.persisted = options.persisted || false;
-    this.dirty = options.dirty || !this.persisted;
+  function byName(item1, item2) {
+    return item1.name.localeCompare(item2.name);
   }
 
   angular.module('fs', ['ngCookies', 'raml', 'utils'])
@@ -38,24 +27,19 @@
         });
 
         this.files = separated.file.map(function(file) {
-          return new RamlFile(file.path, file.contents, { dirty: false, persisted: true} );
-        });
-
-        this.files.sort(function(file1, file2) {
-          return file1.name.localeCompare(file2.name);
+          file.meta = file.meta || {};
+          file.meta.dirty = false;
+          file.meta.persisted = true;
+          return new service.RamlFile(file.path, file.contents, file.meta);
         });
 
         this.folders = separated.folder.map(function(folder) {
-          return new RamlFolder(folder.path, folder.meta, folder.children);
+          return new service.RamlFolder(folder.path, folder.meta, folder.children);
         });
+
+        this.files.sort(byName);
+        this.folders.sort(byName);
       }
-
-      RamlFolder.prototype.createFile = function (name) {
-        var file = service.createFile(this.path + name);
-        this.files.push(file);
-
-        return file;
-      };
 
       RamlFolder.prototype.createFolder = function (name) {
         var parentFolder = this;
@@ -63,6 +47,13 @@
         return service.createFolder(this.path + name).then(function(folder) {
           parentFolder.folders.push(folder);
         });
+      };
+
+      RamlFolder.prototype.createFile = function (name) {
+        var file = service.createFile(this.path + name);
+        this.files.push(file);
+
+        return file;
       };
 
       RamlFolder.prototype.removeFile = function (file) {
@@ -74,13 +65,31 @@
         }.bind(this));
       };
 
-      RamlFolder.prototype.hasFileOrFolderNamed = function(name) {
+      RamlFolder.prototype.fileOrFolderNamed = function(name) {
         function named(item) {
           return item.name.toLowerCase() === name.toLowerCase();
         }
 
-        return this.folders.some(named) || this.files.some(named);
+        return this.folders.filter(named)[0] || this.files.filter(named)[0];
       };
+
+      function RamlFile (path, contents, options) {
+        options = options || {};
+
+        this.path = path;
+        this.name = path.slice(path.lastIndexOf('/') + 1);
+        var extensionMatch = FILE_EXTENSION_EXTRACTOR.exec(this.name);
+        if (extensionMatch) {
+          this.extension = extensionMatch[1];
+        }
+
+        this.contents = contents;
+        this.persisted = options.persisted || false;
+        this.dirty = options.dirty !== undefined ? options.dirty : !this.persisted;
+      }
+
+      service.RamlFolder = RamlFolder;
+      service.RamlFile = RamlFile;
 
       function handleErrorFor(file) {
         return function markFileWithError(error) {
@@ -92,7 +101,7 @@
       service.getFolder = function (path) {
         path = path || defaultPath;
         return fileSystem.folder(path).then(function (folder) {
-          return new RamlFolder(folder.path, folder.meta, folder.children);
+          return new service.RamlFolder(folder.path, folder.meta, folder.children);
         });
       };
 
@@ -146,7 +155,7 @@
       };
 
       service.createFile = function (path) {
-        var file = new RamlFile(path, ramlSnippets.getEmptyRaml());
+        var file = new service.RamlFile(path, ramlSnippets.getEmptyRaml());
         if (file.extension !== 'raml') {
           file.contents = '';
         }
@@ -157,7 +166,7 @@
 
       service.createFolder = function (path) {
         function createFolder() {
-          return new RamlFolder(path);
+          return new service.RamlFolder(path);
         }
 
         return fileSystem.createFolder(path).then(createFolder);
