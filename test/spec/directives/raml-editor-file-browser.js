@@ -73,15 +73,16 @@ describe('ramlEditorFileBrowser', function() {
     });
 
     describe('when there are no files', function() {
-      var openStub;
+      var createFileStub;
 
-      beforeEach(inject(function(ramlEditorFilenamePrompt) {
-        openStub = sinon.spy(ramlEditorFilenamePrompt, 'fileName');
-      }));
+      beforeEach(function() {
+        ramlRepository.files = [];
+        createFileStub = sinon.spy(ramlRepository.folders[0], 'createFile');
+      });
 
-      it('prompts you to name a new file', function(done) {
+      it('creates an \'Untitled-1.raml\' file', function() {
         compileFileBrowser();
-        verifyNewFilePrompt(openStub, done);
+        createFileStub.should.have.been.calledWith('Untitled-1.raml');
       });
     });
   });

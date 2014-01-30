@@ -34,7 +34,7 @@
 
           $scope.fileBrowser.selectFile(fileToOpen);
         } else {
-          promptWhenFileListIsEmpty();
+          $scope.homeFolder.createFile('Untitled-1.raml');
         }
       });
 
