@@ -68,6 +68,7 @@ angular.module('ramlEditorApp')
     };
 
     $scope.$on('event:raml-editor-file-selected', function onFileSelected(event, file) {
+      $scope.projectEmpty = false;
       codeMirror.configureEditor(editor, file.extension);
 
       currentFile = file;
@@ -86,9 +87,16 @@ angular.module('ramlEditorApp')
       }
     });
 
+    $scope.$on('event:raml-editor-project-empty', function onFileSelected() {
+      $scope.projectEmpty = true;
+    });
+
     $scope.sourceUpdated = function sourceUpdated() {
       var source       = editor.getValue();
       var selectedFile = $scope.fileBrowser.selectedFile;
+      if (!selectedFile) {
+        return;
+      }
 
       $scope.clearErrorMarks();
       selectedFile.contents = source;

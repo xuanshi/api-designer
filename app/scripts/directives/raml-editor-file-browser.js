@@ -12,6 +12,7 @@
           });
         }
       };
+
       var newListener = function(e) {
         if (e.which === 78 && (e.altKey && e.shiftKey)) {
           e.preventDefault();
@@ -25,22 +26,8 @@
 
       $scope.fileBrowser = this;
 
-      function promptWhenFileListIsEmpty() {
-        ramlEditorFilenamePrompt.fileName($scope.homeFolder).then(function(filename) {
-          $scope.homeFolder.createFile(filename);
-        });
-      }
-
       ramlRepository.getFolder().then(function(folder) {
         $scope.homeFolder = folder;
-
-        $scope.$watch('homeFolder.files', function(files) {
-          if (files.length === 0) {
-            setTimeout(function() {
-              promptWhenFileListIsEmpty();
-            }, 0);
-          }
-        }, true);
 
         if (folder.containedFiles().length > 0) {
           var lastFile = config.get('currentFile', '');
@@ -62,14 +49,15 @@
       });
 
       $scope.$on('event:raml-editor-file-removed', function(event, file) {
-        if (file === $scope.fileBrowser.selectedFile && $scope.homeFolder.files.length > 0) {
-          $scope.fileBrowser.selectFile($scope.homeFolder.files[0]);
+        if (file !== $scope.fileBrowser.selectedFile) {
+          return;
         }
 
         if ($scope.homeFolder.containedFiles().length > 0) {
+          $scope.fileBrowser.selectFile($scope.homeFolder.files[0]);
+        } else {
           unwatchSelectedFile();
           $scope.fileBrowser.selectedFile = undefined;
-        } else {
           $rootScope.$broadcast('event:raml-editor-project-empty');
         }
       });

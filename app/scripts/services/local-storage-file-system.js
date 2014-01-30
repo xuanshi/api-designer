@@ -71,7 +71,10 @@ angular.module('fs')
         if (entry.path.toLowerCase() !== path.toLowerCase() &&
             entry.path.indexOf(path + entry.name) === 0) {
           addChildren(entry, findFiles);
-          entries.push(entry);
+
+          if (entry.path === path + entry.name) {
+            entries.push(entry);
+          }
         }
       });
       return entries;

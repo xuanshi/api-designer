@@ -20,19 +20,6 @@ describe('ramlEditorFileBrowser', function() {
     document.body.appendChild(el[0]);
   }
 
-  function verifyNewFilePrompt(newFilePromptStub, done) {
-    function verify() {
-      try {
-        newFilePromptStub.should.have.been.called;
-        done();
-      } catch(e) {
-        setTimeout(verify, 10);
-      }
-    }
-
-    setTimeout(verify, 10);
-  }
-
   angular.module('fileBrowserTest', ['ramlEditorApp', 'testFs']);
   beforeEach(module('fileBrowserTest'));
 
@@ -374,18 +361,18 @@ describe('ramlEditorFileBrowser', function() {
     }));
 
     describe('when it is the last file', function() {
-      var openStub;
+      var broadcastStub;
 
-      beforeEach(inject(function($rootScope, ramlRepository, ramlEditorFilenamePrompt) {
+      beforeEach(inject(function($rootScope, ramlRepository) {
         var removed = ramlRepository.files.pop();
-        openStub = sinon.spy(ramlEditorFilenamePrompt, 'fileName');
-
+        broadcastStub = sinon.spy($rootScope, '$broadcast');
         $rootScope.$broadcast('event:raml-editor-file-removed', removed);
-        scope.$digest();
+
+        $rootScope.$digest();
       }));
 
-      it('prompts the user to create a new file', function(done) {
-        verifyNewFilePrompt(openStub, done);
+      it('prompts the user to create a new file', function() {
+        broadcastStub.should.have.been.calledWith('event:raml-editor-project-empty');
       });
     });
 

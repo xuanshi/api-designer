@@ -59,11 +59,13 @@
       };
 
       RamlFolder.prototype.removeFile = function (file) {
-        return service.removeFile(file).then(function() {
-          var index = this.files.indexOf(file);
-          if (index !== -1) {
-            this.files.splice(index, 1);
-          }
+        var index = this.files.indexOf(file);
+        if (index !== -1) {
+          this.files.splice(index, 1);
+        }
+
+        return service.removeFile(file).then(null, function() {
+          this.files.push(file);
         }.bind(this));
       };
 

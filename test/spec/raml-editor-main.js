@@ -104,6 +104,18 @@ describe('RAML Editor Main Controller', function () {
     });
   });
 
+  describe('on event:raml-editor-project-empty', function () {
+    beforeEach(inject(function($rootScope) {
+      ctrl = $controller('ramlEditorMain', params);
+
+      $rootScope.$broadcast('event:raml-editor-project-empty');
+    }));
+
+    it('sets projectEmpty to true', function() {
+      scope.projectEmpty.should.be.true;
+    });
+  });
+
   describe('on event:raml-editor-file-selected', function () {
     beforeEach(function() {
       scope.fileBrowser = {};
@@ -117,6 +129,12 @@ describe('RAML Editor Main Controller', function () {
       scope.$digest();
 
       editor.getValue().should.be.equal('file1');
+    });
+
+    it('sets projectEmpty to false', function() {
+      scope.$emit('event:raml-editor-file-selected', { name: 'api.raml', path: '/', contents: 'file1' });
+      scope.$digest();
+      scope.projectEmpty.should.be.false;
     });
 
     describe('setting the editor mode', function() {
