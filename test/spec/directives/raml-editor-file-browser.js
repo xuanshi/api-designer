@@ -427,6 +427,22 @@ describe('ramlEditorFileBrowser', function() {
     });
   });
 
+  describe('creating a new file', function() {
+    var newSpy;
+
+    beforeEach(inject(function(ramlEditorFilenamePrompt) {
+      compileFileBrowser();
+      newSpy = sandbox.spy(ramlEditorFilenamePrompt, 'fileName');
+    }));
+
+    it('prompts when shift-option-n is pressed', function() {
+      var event = events.keydown(78, { altKey: true, shiftKey: true });
+      document.dispatchEvent(event);
+      newSpy.should.have.been.called;
+    });
+  });
+
+
   describe('file list', function() {
     it('displays', function() {
       ramlRepository.files = [createMockFile('file1'), createMockFile('file2')];

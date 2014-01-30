@@ -4,6 +4,25 @@
   angular.module('ramlEditorApp').directive('ramlEditorFileBrowser', function($rootScope, $q, $window, ramlEditorFilenamePrompt, ramlRepository, config, eventService) {
     var controller = function($scope) {
       var unwatchSelectedFile = angular.noop, contextMenu;
+      var saveListener = function(e) {
+        if (e.which === 83 && (e.metaKey || e.ctrlKey) && !(e.shiftKey || e.altKey)) {
+          e.preventDefault();
+          $scope.$apply(function() {
+            $scope.fileBrowser.saveFile($scope.fileBrowser.selectedFile);
+          });
+        }
+      };
+      var newListener = function(e) {
+        if (e.which === 78 && (e.altKey && e.shiftKey)) {
+          e.preventDefault();
+          $scope.$apply(function() {
+            ramlEditorFilenamePrompt.fileName($scope.homeFolder).then(function(name) {
+              $scope.homeFolder.createFile(name);
+            });
+          });
+        }
+      };
+
       $scope.fileBrowser = this;
 
       function promptWhenFileListIsEmpty() {
@@ -46,6 +65,25 @@
         if (file === $scope.fileBrowser.selectedFile && $scope.homeFolder.files.length > 0) {
           $scope.fileBrowser.selectFile($scope.homeFolder.files[0]);
         }
+
+        if ($scope.homeFolder.containedFiles().length > 0) {
+          unwatchSelectedFile();
+          $scope.fileBrowser.selectedFile = undefined;
+        } else {
+          $rootScope.$broadcast('event:raml-editor-project-empty');
+        }
+      });
+
+      $scope.registerContextMenu = function(cm) {
+        contextMenu = cm;
+      };
+
+      $window.addEventListener('keydown', saveListener);
+      $window.addEventListener('keydown', newListener);
+
+      $scope.$on('$destroy', function() {
+        $window.removeEventListener('keydown', saveListener);
+        $window.removeEventListener('keydown', newListener);
       });
 
       this.selectFile = function(file) {
@@ -79,28 +117,9 @@
         });
       };
 
-      $scope.registerContextMenu = function(cm) {
-        contextMenu = cm;
-      };
-
       this.openContextMenu = function(event, actions, onClose) {
         contextMenu.open(event, actions, onClose);
       };
-
-      var saveListener = function(e) {
-        if (e.which === 83 && (e.metaKey || e.ctrlKey) && !(e.shiftKey || e.altKey)) {
-          e.preventDefault();
-          $scope.$apply(function() {
-            $scope.fileBrowser.saveFile($scope.fileBrowser.selectedFile);
-          });
-        }
-      };
-
-      $window.addEventListener('keydown', saveListener);
-
-      $scope.$on('$destroy', function() {
-        $window.removeEventListener('keydown', saveListener);
-      });
     };
 
     return {
