@@ -22,7 +22,7 @@
       var service = {};
       var defaultPath = '/';
 
-      function RamlDirectory(path, meta, contents) {
+      function RamlFolder(path, meta, contents) {
         if (!/\/$/.exec(path)) { path = path + '/'; }
         contents = contents || [];
 
@@ -45,27 +45,27 @@
           return file1.name.localeCompare(file2.name);
         });
 
-        this.directories = separated.folder.map(function(directory) {
-          return new RamlDirectory(directory.path, directory.meta, directory.children);
+        this.folders = separated.folder.map(function(folder) {
+          return new RamlFolder(folder.path, folder.meta, folder.children);
         });
       }
 
-      RamlDirectory.prototype.createFile = function (name) {
+      RamlFolder.prototype.createFile = function (name) {
         var file = service.createFile(this.path + name);
         this.files.push(file);
 
         return file;
       };
 
-      RamlDirectory.prototype.createDirectory = function (name) {
-        var parentDirectory = this;
+      RamlFolder.prototype.createFolder = function (name) {
+        var parentFolder = this;
 
-        return service.createFolder(this.path + name).then(function(directory) {
-          parentDirectory.directories.push(directory);
+        return service.createFolder(this.path + name).then(function(folder) {
+          parentFolder.folders.push(folder);
         });
       };
 
-      RamlDirectory.prototype.removeFile = function (file) {
+      RamlFolder.prototype.removeFile = function (file) {
         return service.removeFile(file).then(function() {
           var index = this.files.indexOf(file);
           if (index !== -1) {
@@ -74,12 +74,12 @@
         }.bind(this));
       };
 
-      RamlDirectory.prototype.hasFileOrFolderNamed = function(name) {
+      RamlFolder.prototype.hasFileOrFolderNamed = function(name) {
         function named(item) {
           return item.name.toLowerCase() === name.toLowerCase();
         }
 
-        return this.directories.some(named) || this.files.some(named);
+        return this.folders.some(named) || this.files.some(named);
       };
 
       function handleErrorFor(file) {
@@ -89,10 +89,10 @@
         };
       }
 
-      service.getDirectory = function (path) {
+      service.getFolder = function (path) {
         path = path || defaultPath;
-        return fileSystem.directory(path).then(function (folder) {
-          return new RamlDirectory(folder.path, folder.meta, folder.children);
+        return fileSystem.folder(path).then(function (folder) {
+          return new RamlFolder(folder.path, folder.meta, folder.children);
         });
       };
 
@@ -156,11 +156,11 @@
       };
 
       service.createFolder = function (path) {
-        function createDirectory() {
-          return new RamlDirectory(path);
+        function createFolder() {
+          return new RamlFolder(path);
         }
 
-        return fileSystem.createFolder(path).then(createDirectory);
+        return fileSystem.createFolder(path).then(createFolder);
       };
 
 

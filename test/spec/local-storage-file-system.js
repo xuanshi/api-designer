@@ -18,7 +18,7 @@ describe('Local Storage File System', function() {
 
     describe('list', function() {
       it('should return root with no entries', function(done) {
-        localStorageFileSystem.directory('/')
+        localStorageFileSystem.folder('/')
           .then(function(folder) {
             folder.should.not.be.null;
             folder.children.should.have.length(0);
@@ -63,7 +63,7 @@ describe('Local Storage File System', function() {
     describe('list', function() {
       it('should list recently saved file among the entries', function(done) {
         localStorageFileSystem.save(path, content).then(function() {
-          localStorageFileSystem.directory(folder).then(function(folder) {
+          localStorageFileSystem.folder(folder).then(function(folder) {
             folder.should.not.be.null;
             folder.children.should.have.length(1);
             hasPath(folder.children, path).should.be.ok;
@@ -87,7 +87,7 @@ describe('Local Storage File System', function() {
     describe('remove', function() {
       it('should remove recently saved file', function(done) {
         localStorageFileSystem.remove(path).then(function() {
-          localStorageFileSystem.directory(folder).then(function(folder) {
+          localStorageFileSystem.folder(folder).then(function(folder) {
             folder.should.not.be.null;
             folder.children.should.have.length(0);
             hasPath(folder.children, path).should.not.be.ok;
@@ -104,7 +104,7 @@ describe('Local Storage File System', function() {
 
         localStorageFileSystem.save(path, content).then(function() {
           localStorageFileSystem.rename(path, destination).then(function(){
-            localStorageFileSystem.directory(folder).then(function(folder){
+            localStorageFileSystem.folder(folder).then(function(folder){
               folder.should.not.be.null;
               folder.children.should.have.length(1);
               hasPath(folder.children, destination).should.be.ok;
@@ -135,7 +135,7 @@ describe('Local Storage File System', function() {
 
     describe('list', function() {
       it('should list files and folders for root folder', function(done) {
-        localStorageFileSystem.directory('/').then(function(folder) {
+        localStorageFileSystem.folder('/').then(function(folder) {
           folder.should.not.be.null;
           folder.children.should.have.length(3);
           done();
@@ -144,7 +144,7 @@ describe('Local Storage File System', function() {
       });
 
       it('should list files and folders for sub folders', function(done) {
-        localStorageFileSystem.directory('/folder').then(function(folder) {
+        localStorageFileSystem.folder('/folder').then(function(folder) {
           folder.should.not.be.null;
           folder.children.length.should.equal(3);
           hasPath(folder.children, '/folder/example.raml').should.be.ok;
@@ -165,7 +165,7 @@ describe('Local Storage File System', function() {
 
       it('should create folders at root level', function(done) {
         localStorageFileSystem.createFolder('/newFolder').then(function() {
-          localStorageFileSystem.directory('/').then(function(folder) {
+          localStorageFileSystem.folder('/').then(function(folder) {
             folder.should.not.be.null;
             folder.children.should.have.length(4);
             hasPath(folder.children, '/newFolder').should.be.ok;
@@ -184,7 +184,7 @@ describe('Local Storage File System', function() {
 
       it('should support nested folders', function(done) {
         localStorageFileSystem.createFolder('/folder/newSubFolder').then(function() {
-          localStorageFileSystem.directory('/folder', true).then(function(folder) {
+          localStorageFileSystem.folder('/folder', true).then(function(folder) {
             folder.should.not.be.null;
             folder.children.length.should.equal(4);
             hasPath(folder.children, '/folder/newSubFolder').should.be.ok;
@@ -251,12 +251,12 @@ describe('Local Storage File System', function() {
         var error = sinon.spy();
 
         localStorageFileSystem.rename('/example.raml', '/emptyFolder/example.raml').then(function(){
-          localStorageFileSystem.directory('/').then(function(folder){
+          localStorageFileSystem.folder('/').then(function(folder){
             folder.should.not.be.null;
             folder.children.should.have.length(2);
             hasPath(folder.children, '/example.raml').should.not.be.ok;
 
-            localStorageFileSystem.directory('/emptyFolder').then(function(folder){
+            localStorageFileSystem.folder('/emptyFolder').then(function(folder){
               folder.should.not.be.null;
               folder.children.should.have.length(1);
               hasPath(folder.children, '/emptyFolder/example.raml').should.be.ok;
@@ -272,14 +272,14 @@ describe('Local Storage File System', function() {
         var error = sinon.spy();
 
         localStorageFileSystem.rename('/folder', '/renamedFolder').then(function(){
-          localStorageFileSystem.directory('/folder').then(function(folder){
+          localStorageFileSystem.folder('/folder').then(function(folder){
             expect(folder).to.be.null;
 
-            localStorageFileSystem.directory('/renamedFolder').then(function(folder){
+            localStorageFileSystem.folder('/renamedFolder').then(function(folder){
               folder.should.not.be.null;
               folder.children.should.have.length(3);
 
-              localStorageFileSystem.directory('/renamedFolder/subFolderA').then(function(folder){
+              localStorageFileSystem.folder('/renamedFolder/subFolderA').then(function(folder){
                 folder.should.not.be.null;
                 folder.children.should.have.length(1);
                 done();

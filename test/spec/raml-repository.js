@@ -23,11 +23,11 @@ describe('RAML Repository', function () {
     sandbox.restore();
   }));
 
-  describe('getDirectory', function () {
-    it('should reflect the contents of a directory on success', function () {
+  describe('getFolder', function () {
+    it('should reflect the contents of a folder on success', function () {
       // Arrange
-      var directoryDeferred = $q.defer();
-      sinon.stub(fileSystem, 'directory').returns(directoryDeferred.promise);
+      var folderDeferred = $q.defer();
+      sinon.stub(fileSystem, 'folder').returns(folderDeferred.promise);
       var success = sinon.stub();
       var files = {
         path: '/',
@@ -42,30 +42,30 @@ describe('RAML Repository', function () {
       };
 
       // Act
-      ramlRepository.getDirectory('/').then(success);
+      ramlRepository.getFolder('/').then(success);
 
-      directoryDeferred.resolve(files);
+      folderDeferred.resolve(files);
       $rootScope.$apply();
 
       // Assert
-      var directory = success.firstCall.args[0];
-      directory.files[0].path.should.be.equal(files.children[0].path);
-      directory.files[0].name.should.be.equal(files.children[0].name);
-      directory.files[0].dirty.should.be.false;
-      directory.files[0].persisted.should.be.true;
+      var folder = success.firstCall.args[0];
+      folder.files[0].path.should.be.equal(files.children[0].path);
+      folder.files[0].name.should.be.equal(files.children[0].name);
+      folder.files[0].dirty.should.be.false;
+      folder.files[0].persisted.should.be.true;
     });
 
     it('should handle errors', function () {
       // Arrange
-      var directoryDeferred = $q.defer();
-      sinon.stub(fileSystem, 'directory').returns(directoryDeferred.promise);
+      var folderDeferred = $q.defer();
+      sinon.stub(fileSystem, 'folder').returns(folderDeferred.promise);
       var error = sinon.stub();
       var errorData = {message: 'Error occurred'};
 
       // Act
-      ramlRepository.getDirectory('/').then(function () {}, error);
+      ramlRepository.getFolder('/').then(function () {}, error);
 
-      directoryDeferred.reject(errorData);
+      folderDeferred.reject(errorData);
       $rootScope.$apply();
 
       // Assert

@@ -7,15 +7,15 @@
       $scope.fileBrowser = this;
 
       function promptWhenFileListIsEmpty() {
-        ramlEditorFilenamePrompt.fileName($scope.homeDirectory).then(function(filename) {
-          $scope.homeDirectory.createFile(filename);
+        ramlEditorFilenamePrompt.fileName($scope.homeFolder).then(function(filename) {
+          $scope.homeFolder.createFile(filename);
         });
       }
 
-      ramlRepository.getDirectory().then(function(directory) {
-        $scope.homeDirectory = directory;
+      ramlRepository.getFolder().then(function(folder) {
+        $scope.homeFolder = folder;
 
-        $scope.$watch('homeDirectory.files', function(files) {
+        $scope.$watch('homeFolder.files', function(files) {
           if (files.length === 0) {
             setTimeout(function() {
               promptWhenFileListIsEmpty();
@@ -23,14 +23,14 @@
           }
         }, true);
 
-        if (directory.files.length > 0) {
+        if (folder.files.length > 0) {
           var lastFile = JSON.parse(config.get('currentFile', '{}'));
 
-          var fileToOpen = directory.files.filter(function(file) {
+          var fileToOpen = folder.files.filter(function(file) {
             return file.name === lastFile.name && file.path === lastFile.path;
           })[0];
 
-          fileToOpen = fileToOpen || directory.files[0];
+          fileToOpen = fileToOpen || folder.files[0];
 
           $scope.fileBrowser.selectFile(fileToOpen);
         } else {
@@ -43,8 +43,8 @@
       });
 
       $scope.$on('event:raml-editor-file-removed', function(event, file) {
-        if (file === $scope.fileBrowser.selectedFile && $scope.homeDirectory.files.length > 0) {
-          $scope.fileBrowser.selectFile($scope.homeDirectory.files[0]);
+        if (file === $scope.fileBrowser.selectedFile && $scope.homeFolder.files.length > 0) {
+          $scope.fileBrowser.selectFile($scope.homeFolder.files[0]);
         }
       });
 

@@ -2,7 +2,7 @@
 (function() {
   'use strict';
   angular.module('ramlEditorApp').directive('ramlEditorFileItem', function(ramlRepository, ramlEditorRemoveFilePrompt, ramlEditorFilenamePrompt) {
-    function Actions(directory, file) {
+    function Actions(folder, file) {
       return [
         {
           label: 'Save',
@@ -13,13 +13,13 @@
         {
           label: 'Delete',
           execute: function() {
-            ramlEditorRemoveFilePrompt.open(directory, file);
+            ramlEditorRemoveFilePrompt.open(folder, file);
           }
         },
         {
           label: 'Rename',
           execute: function() {
-            ramlEditorFilenamePrompt.fileName(directory, file.name).then(function(filename) {
+            ramlEditorFilenamePrompt.fileName(folder, file.name).then(function(filename) {
               ramlRepository.renameFile(file, filename);
             });
           }
@@ -37,7 +37,7 @@
         $scope.showContextMenu = function($event) {
           contextMenuOpen = true;
 
-          var actions = Actions($scope.directory, $scope.file);
+          var actions = Actions($scope.folder, $scope.file);
           controller.openContextMenu($event, actions, function() {
             contextMenuOpen = false;
           });

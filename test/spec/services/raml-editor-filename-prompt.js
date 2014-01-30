@@ -1,7 +1,7 @@
 describe('ramlEditorFilenamePrompt', function() {
   'use strict';
 
-  var sandbox, ramlRepository, newFilePrompt, digest, directory;
+  var sandbox, ramlRepository, newFilePrompt, digest, folder;
 
   beforeEach(module('ramlEditorApp'));
 
@@ -14,15 +14,15 @@ describe('ramlEditorFilenamePrompt', function() {
   }));
 
   beforeEach(function(done) {
-    ramlRepository.getDirectory().then(function(fetched) {
-      directory = fetched;
+    ramlRepository.getFolder().then(function(fetched) {
+      folder = fetched;
       done();
     });
     digest();
   });
 
   afterEach(function() {
-    ramlRepository = newFilePrompt = directory = undefined;
+    ramlRepository = newFilePrompt = folder = undefined;
     localStorage.clear();
     sandbox.restore();
   });
@@ -35,13 +35,13 @@ describe('ramlEditorFilenamePrompt', function() {
     });
 
     it('prompts user for filename', function() {
-      newFilePrompt.fileName(directory);
+      newFilePrompt.fileName(folder);
 
       promptSpy.should.have.been.calledWith('Choose a name:');
     });
 
     it('allows the suggested name to be overridden', function() {
-      newFilePrompt.fileName(directory, 'MyName.raml');
+      newFilePrompt.fileName(folder, 'MyName.raml');
 
       promptSpy.should.have.been.calledWith('Choose a name:', 'MyName.raml');
     });
@@ -52,7 +52,7 @@ describe('ramlEditorFilenamePrompt', function() {
       });
 
       it('resolves the promise with the chosen file name', function(done) {
-        var promise = newFilePrompt.fileName(directory);
+        var promise = newFilePrompt.fileName(folder);
 
         promise.then(function(chosenName) {
           chosenName.should.equal('MyFile.raml');
@@ -66,9 +66,9 @@ describe('ramlEditorFilenamePrompt', function() {
 
         beforeEach(function() {
           alertSpy = sandbox.stub(window, 'alert');
-          directory.createFile('MYFILE.raml');
+          folder.createFile('MYFILE.raml');
 
-          promise = newFilePrompt.fileName(directory);
+          promise = newFilePrompt.fileName(folder);
           digest();
         });
 
@@ -91,7 +91,7 @@ describe('ramlEditorFilenamePrompt', function() {
       beforeEach(function() {
         promptSpy.returns(null);
 
-        promise = newFilePrompt.fileName(directory);
+        promise = newFilePrompt.fileName(folder);
         digest();
       });
 
@@ -105,45 +105,45 @@ describe('ramlEditorFilenamePrompt', function() {
 
     describe('suggested filename', function() {
       it('defaults to Untitled-1.raml first', function() {
-        newFilePrompt.fileName(directory);
+        newFilePrompt.fileName(folder);
         promptSpy.should.have.been.calledWith(sinon.match.any, 'Untitled-1.raml');
       });
 
       it('does not increment the filename if you cancel', function() {
         promptSpy.returns(null);
-        newFilePrompt.fileName(directory);
-        newFilePrompt.fileName(directory);
+        newFilePrompt.fileName(folder);
+        newFilePrompt.fileName(folder);
         promptSpy.should.have.been.calledWith(sinon.match.any, 'Untitled-1.raml');
       });
 
       describe('with an existing Untitled-1.raml', function() {
         beforeEach(function() {
-          directory.createFile('Untitled-1.raml');
+          folder.createFile('Untitled-1.raml');
         });
 
         it('defaults to Untitled-2.raml second', function() {
           promptSpy.returns('the-name-i-actually-give-the-second-file.raml');
-          newFilePrompt.fileName(directory);
+          newFilePrompt.fileName(folder);
           promptSpy.should.have.been.calledWith(sinon.match.any, 'Untitled-2.raml');
         });
       });
 
       describe('given an existing Untitled-6.raml', function() {
         beforeEach(function() {
-          directory.createFile('file2');
-          directory.createFile('Untitled-6.raml');
-          directory.createFile('Zebras');
+          folder.createFile('file2');
+          folder.createFile('Untitled-6.raml');
+          folder.createFile('Zebras');
         });
 
         it('it defaults to Untitled-7.raml', function() {
-          newFilePrompt.fileName(directory);
+          newFilePrompt.fileName(folder);
           promptSpy.should.have.been.calledWith(sinon.match.any, 'Untitled-7.raml');
         });
       });
     });
   });
 
-  describe('getting a directory name', function() {
+  describe('getting a folder name', function() {
     var promptSpy;
 
     beforeEach(function() {
@@ -152,20 +152,20 @@ describe('ramlEditorFilenamePrompt', function() {
 
     describe('suggested filename', function() {
       it('defaults to Untitled-Folder-1 first', function() {
-        newFilePrompt.directoryName(directory);
+        newFilePrompt.folderName(folder);
         promptSpy.should.have.been.calledWith(sinon.match.any, 'Untitled-Folder-1');
       });
 
       it('does not increment the filename if you cancel', function() {
         promptSpy.returns(null);
-        newFilePrompt.directoryName(directory);
-        newFilePrompt.directoryName(directory);
+        newFilePrompt.folderName(folder);
+        newFilePrompt.folderName(folder);
         promptSpy.should.have.been.calledWith(sinon.match.any, 'Untitled-Folder-1');
       });
 
       describe('with an existing Untitled-Folder-1', function() {
         beforeEach(function(done) {
-          directory.createDirectory('Untitled-Folder-1').then(function() {
+          folder.createFolder('Untitled-Folder-1').then(function() {
             done();
           });
           digest();
@@ -173,7 +173,7 @@ describe('ramlEditorFilenamePrompt', function() {
 
         it('defaults to Untitled-Folder-2 second', function() {
           promptSpy.returns('the-name-i-actually-give-the-second-file.raml');
-          newFilePrompt.directoryName(directory);
+          newFilePrompt.folderName(folder);
           promptSpy.should.have.been.calledWith(sinon.match.any, 'Untitled-Folder-2');
         });
       });
@@ -183,9 +183,9 @@ describe('ramlEditorFilenamePrompt', function() {
 
         beforeEach(function(done) {
           alertSpy = sandbox.stub(window, 'alert');
-          directory.createDirectory('MyDirectory').then(function() {
-            promptSpy.returns('MyDirectory');
-            promise = newFilePrompt.directoryName(directory);
+          folder.createFolder('Myfolder').then(function() {
+            promptSpy.returns('Myfolder');
+            promise = newFilePrompt.folderName(folder);
             done();
           });
           digest();

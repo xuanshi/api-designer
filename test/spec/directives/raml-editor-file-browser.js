@@ -150,11 +150,11 @@ describe('ramlEditorFileBrowser', function() {
       })[0];
     }
 
-    describe('for a directory', function() {
+    describe('for a folder', function() {
       beforeEach(function() {
         ramlRepository.files = [createMockFile('file1'), createMockFile('file2')];
         compileFileBrowser();
-        iconToClick = el[0].querySelectorAll('.file-item[role="directory"] .icon')[1];
+        iconToClick = el[0].querySelectorAll('.file-item[role="folder"] .icon')[1];
       });
 
       describe('by default', function() {
@@ -183,7 +183,7 @@ describe('ramlEditorFileBrowser', function() {
         beforeEach(function() {
           iconToClick.dispatchEvent(events.click());
           inject(function(ramlRepository, ramlEditorFilenamePrompt) {
-            createFileStub = sandbox.stub(ramlRepository.directories[0], 'createFile');
+            createFileStub = sandbox.stub(ramlRepository.folders[0], 'createFile');
             filenamePromptStub = sandbox.stub(ramlEditorFilenamePrompt, 'fileName');
           });
           promptSpy = sandbox.stub(window, 'prompt');
@@ -195,7 +195,7 @@ describe('ramlEditorFileBrowser', function() {
           filenamePromptStub.returns(promise.stub());
           createItem.dispatchEvent(events.click());
 
-          filenamePromptStub.should.have.been.calledWith(scope.homeDirectory);
+          filenamePromptStub.should.have.been.calledWith(scope.homeFolder);
         });
 
         describe('upon success', function() {
@@ -204,7 +204,7 @@ describe('ramlEditorFileBrowser', function() {
             createItem.dispatchEvent(events.click());
           });
 
-          it('creates a file in the current directory', function() {
+          it('creates a file in the current folder', function() {
             createFileStub.should.have.been.calledWith('NewName.raml');
           });
         });
@@ -216,8 +216,8 @@ describe('ramlEditorFileBrowser', function() {
         beforeEach(function() {
           iconToClick.dispatchEvent(events.click());
           inject(function(ramlRepository, ramlEditorFilenamePrompt) {
-            createFolderStub = sandbox.stub(ramlRepository.directories[0], 'createDirectory');
-            filenamePromptStub = sandbox.stub(ramlEditorFilenamePrompt, 'directoryName');
+            createFolderStub = sandbox.stub(ramlRepository.folders[0], 'createFolder');
+            filenamePromptStub = sandbox.stub(ramlEditorFilenamePrompt, 'folderName');
           });
           promptSpy = sandbox.stub(window, 'prompt');
 
@@ -228,7 +228,7 @@ describe('ramlEditorFileBrowser', function() {
           filenamePromptStub.returns(promise.stub());
           createItem.dispatchEvent(events.click());
 
-          filenamePromptStub.should.have.been.calledWith(scope.homeDirectory);
+          filenamePromptStub.should.have.been.calledWith(scope.homeFolder);
         });
 
         describe('upon success', function() {
@@ -304,7 +304,7 @@ describe('ramlEditorFileBrowser', function() {
         }));
 
         it('delegates to the ramlRepository', function() {
-          openStub.should.have.been.calledWith(scope.homeDirectory, file);
+          openStub.should.have.been.calledWith(scope.homeFolder, file);
         });
       });
 
@@ -326,7 +326,7 @@ describe('ramlEditorFileBrowser', function() {
           filenamePromptStub.returns(promise.stub());
           renameItem.dispatchEvent(events.click());
 
-          filenamePromptStub.should.have.been.calledWith(scope.homeDirectory, file.name);
+          filenamePromptStub.should.have.been.calledWith(scope.homeFolder, file.name);
         });
 
         describe('upon success', function() {
@@ -432,9 +432,9 @@ describe('ramlEditorFileBrowser', function() {
       ramlRepository.files = [createMockFile('file1'), createMockFile('file2')];
       compileFileBrowser();
 
-      scope.homeDirectory.files.length.should.equal(2);
-      scope.homeDirectory.files[0].name.should.equal('file1');
-      scope.homeDirectory.files[1].name.should.equal('file2');
+      scope.homeFolder.files.length.should.equal(2);
+      scope.homeFolder.files[0].name.should.equal('file1');
+      scope.homeFolder.files[1].name.should.equal('file2');
 
       el.text().should.contain('file1');
       el.text().should.contain('file2');

@@ -1,14 +1,14 @@
 /* jshint newcap: false */
 (function() {
   'use strict';
-  angular.module('ramlEditorApp').directive('ramlEditorDirectoryItem', function($compile, ramlEditorFilenamePrompt) {
-    function Actions(directory) {
+  angular.module('ramlEditorApp').directive('ramlEditorFolderItem', function($compile, ramlEditorFilenamePrompt) {
+    function Actions(folder) {
       return [
         {
           label: 'New Folder',
           execute: function() {
-            ramlEditorFilenamePrompt.directoryName(directory).then(function(filename) {
-              directory.createDirectory(filename);
+            ramlEditorFilenamePrompt.folderName(folder).then(function(filename) {
+              folder.createFolder(filename);
             });
           }
         },
@@ -16,8 +16,8 @@
         {
           label: 'New File',
           execute: function() {
-            ramlEditorFilenamePrompt.fileName(directory).then(function(filename) {
-              directory.createFile(filename);
+            ramlEditorFilenamePrompt.fileName(folder).then(function(filename) {
+              folder.createFile(filename);
             });
           }
         }
@@ -28,7 +28,7 @@
       restrict: 'A',
       terminal: true,
       scope: {
-        directory: '='
+        folder: '='
       },
       require: '^ramlEditorFileBrowser',
       compile: function(element) {
@@ -38,7 +38,7 @@
           scope.showContextMenu = function($event) {
             contextMenuOpen = true;
 
-            var actions = Actions(scope.directory);
+            var actions = Actions(scope.folder);
             scope.fileBrowser.openContextMenu($event, actions, function() {
               contextMenuOpen = false;
             });

@@ -1,15 +1,15 @@
 <raml-editor-context-menu></raml-editor-context-menu>
 <ul class="file-list">
-  <li raml-editor-directory-item directory="homeDirectory">
-    <div class="file-item" role="directory" ng-class="{geared: contextMenuOpen()}">
+  <li raml-editor-folder-item folder="homeFolder">
+    <div class="file-item" role="folder" ng-class="{geared: contextMenuOpen()}">
       <i class="icon icon-folder-open-alt"></i>
-      <span class="file-name">{{ directory.name }}</span>
+      <span class="file-name">{{ folder.name }}</span>
       <i class="icon icon-cog" ng-click="showContextMenu($event)"></i>
     </div>
     <ul class="file-list">
-      <li ng-repeat="subDirectory in directory.directories | orderBy:'name'" ng-transclude ng-init="directory = subDirectory">
+      <li ng-repeat="subFolder in folder.folders | orderBy:'name'" ng-transclude ng-init="folder = subFolder">
       </li>
-      <li raml-editor-file-item ng-repeat="file in directory.files | orderBy:'name'"></li>
+      <li raml-editor-file-item ng-repeat="file in folder.files | orderBy:'name'"></li>
     </ul>
   </li>
 </ul>

@@ -132,7 +132,7 @@ angular.module('fs')
     /**
      * List files found in a given path.
      */
-    service.directory = function (path) {
+    service.folder = function (path) {
       var deferred = $q.defer();
       var isValidPath = validatePath(path);
 
@@ -251,7 +251,7 @@ angular.module('fs')
     };
 
     /**
-     * Removes a file or directory.
+     * Removes a file or folder.
      */
     service.remove = function (path) {
       var deferred = $q.defer();
@@ -269,7 +269,7 @@ angular.module('fs')
     };
 
     /**
-     * Ranames a file or directory
+     * Ranames a file or folder
      */
     service.rename = function (source, destination) {
       var deferred = $q.defer();
