@@ -23,11 +23,11 @@
           }
         }, true);
 
-        if (folder.files.length > 0) {
-          var lastFile = JSON.parse(config.get('currentFile', '{}'));
+        if (folder.containedFiles().length > 0) {
+          var lastFile = config.get('currentFile', '');
 
-          var fileToOpen = folder.files.filter(function(file) {
-            return file.name === lastFile.name && file.path === lastFile.path;
+          var fileToOpen = folder.containedFiles().filter(function(file) {
+            return file.path === lastFile;
           })[0];
 
           fileToOpen = fileToOpen || folder.files[0];
@@ -53,7 +53,7 @@
           return;
         }
 
-        config.set('currentFile', JSON.stringify({ path: file.path, name: file.name }));
+        config.set('currentFile', file.path);
         unwatchSelectedFile();
 
         var isLoaded = !file.persisted || angular.isString(file.contents);

@@ -46,6 +46,8 @@
 
         return service.createFolder(this.path + name).then(function(folder) {
           parentFolder.folders.push(folder);
+
+          return folder;
         });
       };
 
@@ -71,6 +73,12 @@
         }
 
         return this.folders.filter(named)[0] || this.files.filter(named)[0];
+      };
+
+      RamlFolder.prototype.containedFiles = function(){
+        return this.folders.reduce(function(files, folder) {
+          return files.concat(folder.containedFiles());
+        }, this.files);
       };
 
       function RamlFile (path, contents, options) {

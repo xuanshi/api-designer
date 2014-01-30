@@ -63,7 +63,7 @@ describe('ramlEditorFileBrowser', function() {
         ramlRepository.files = [createMockFile('lastFile'), createMockFile('firstFile')];
         var fileToOpen = ramlRepository.files[0];
 
-        config.set('currentFile', JSON.stringify({ name: fileToOpen.name, path: fileToOpen.path }));
+        config.set('currentFile', fileToOpen.path);
         compileFileBrowser();
       }));
 
@@ -107,8 +107,7 @@ describe('ramlEditorFileBrowser', function() {
       });
 
       it('updates the currentFile stored in config', inject(function(config) {
-        JSON.parse(config.get('currentFile')).name.should.equal('file2');
-        JSON.parse(config.get('currentFile')).path.should.equal('/file2');
+        config.get('currentFile').should.equal('/file2');
       }));
 
       it('adds the "currentfile" class to the file clicked', function() {

@@ -234,4 +234,38 @@ describe('ramlRepository.RamlFolder', function() {
       this.folder.fileOrFolderNamed('subFolder').should.eql(this.subFolder);
     });
   });
+
+  describe('calculating total file count', function() {
+    beforeEach(function(done) {
+      this.ramlRepository.getFolder().then(function(folder) {
+        this.folder = folder;
+
+        folder.createFile('file.raml');
+        folder.createFolder('subFolder1').then(function(subFolder) {
+          subFolder.createFile('file.raml');
+
+          folder.createFolder('subFolder2').then(function(subFolder) {
+            subFolder.createFile('file.raml');
+
+            subFolder.createFolder('subFolder1').then(function(subFolder) {
+              subFolder.createFile('file.raml');
+
+              done();
+            });
+          });
+        });
+      }.bind(this));
+
+      digest();
+    });
+
+    it('returns the number of files contained in this and all sub folders', function() {
+      var paths = this.folder.containedFiles().map(function(file) { return file.path; });
+      paths.length.should.eql(4);
+      paths.should.include('/file.raml');
+      paths.should.include('/subFolder1/file.raml');
+      paths.should.include('/subFolder2/file.raml');
+      paths.should.include('/subFolder2/subFolder1/file.raml');
+    });
+  });
 });

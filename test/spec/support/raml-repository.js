@@ -9,7 +9,8 @@ angular.module('testFs', [])
       path: '/OMG/',
       name: 'OMG',
       createFile: function() {},
-      createFolder: function() {}
+      createFolder: function() {},
+      containedFiles: function() { return service.files; }
     }];
 
     service.getFolder = function () {
