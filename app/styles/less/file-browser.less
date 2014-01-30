@@ -64,6 +64,10 @@
 
     flex: 1;
 
+    ul {
+      overflow: visible;
+    }
+
     .file-item {
       padding: 5px 10px;
       cursor: pointer;
@@ -76,11 +80,15 @@
       &:not(.currentfile):hover {
         color: #ccc;
         background-color: #808395;
+        margin-left: -5000px;
+        padding-left: 5010px;
       }
 
       &.currentfile {
         color: #ddd;
         background-color: @cello_blue;
+        margin-left: -5000px;
+        padding-left: 5010px;
       }
 
       .file-name {
