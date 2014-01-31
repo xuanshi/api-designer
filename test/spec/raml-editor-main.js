@@ -114,6 +114,10 @@ describe('RAML Editor Main Controller', function () {
     it('sets projectEmpty to true', function() {
       scope.projectEmpty.should.be.true;
     });
+
+    it('sets fileParsable to false', function() {
+      scope.fileParsable.should.be.false;
+    });
   });
 
   describe('on event:raml-editor-file-selected', function () {

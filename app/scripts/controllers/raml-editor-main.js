@@ -89,6 +89,7 @@ angular.module('ramlEditorApp')
 
     $scope.$on('event:raml-editor-project-empty', function onFileSelected() {
       $scope.projectEmpty = true;
+      $scope.fileParsable = false;
     });
 
     $scope.sourceUpdated = function sourceUpdated() {
