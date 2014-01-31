@@ -237,7 +237,7 @@ describe('ramlEditorFileBrowser', function() {
       beforeEach(function() {
         ramlRepository.files = [createMockFile('file1'), createMockFile('file2')];
         compileFileBrowser();
-        iconToClick = el[0].querySelectorAll('.file-item[role="file"] .icon')[1];
+        iconToClick = el[0].querySelectorAll('.file-item[role="file"] .icon')[0];
         file = ramlRepository.files[0];
 
         sandbox.spy(ramlRepository, 'loadFile');
