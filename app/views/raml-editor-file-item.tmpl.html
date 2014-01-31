@@ -1,7 +1,6 @@
 <div class="file-item" role="file"
     ng-click="fileBrowser.selectFile(file)"
     ng-class="{currentfile: fileBrowser.selectedFile === file, dirty: file.dirty, geared: contextMenuOpen()}">
-  <i class="icon icon-file-alt"></i>
   <span class="file-name">{{file.name}}</span>
   <i class="icon icon-cog" ng-click="showContextMenu($event)"></i>
 </div>
