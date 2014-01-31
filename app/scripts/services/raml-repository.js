@@ -12,12 +12,13 @@
       var defaultPath = '/';
 
       function RamlFolder(path, meta, contents) {
-        if (!/\/$/.exec(path)) { path = path + '/'; }
         contents = contents || [];
+        if (/\/$/.exec(path)) {
+          path = path.substring(0, path.length - 1);
+        }
 
-        var strippedPath = path.substring(0, path.length - 1);
-        this.path = path;
-        this.name = strippedPath.slice(strippedPath.lastIndexOf('/') + 1);
+        this.path = path || '/';
+        this.name = path.slice(path.lastIndexOf('/') + 1);
         this.name = this.name || '/';
         this.meta = meta;
 
@@ -44,7 +45,8 @@
       RamlFolder.prototype.createFolder = function (name) {
         var parentFolder = this;
 
-        return service.createFolder(this.path + name).then(function(folder) {
+        var newPath = (this.path === '/') ?  this.path + name : this.path + '/' + name;
+        return service.createFolder(newPath).then(function(folder) {
           parentFolder.folders.push(folder);
 
           return folder;
@@ -52,7 +54,8 @@
       };
 
       RamlFolder.prototype.createFile = function (name) {
-        var file = service.createFile(this.path + name);
+        var newPath = (this.path === '/') ?  this.path + name : this.path + '/' + name;
+        var file = service.createFile(newPath);
         this.files.push(file);
 
         return file;

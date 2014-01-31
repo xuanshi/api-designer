@@ -24,11 +24,11 @@ describe('ramlRepository.RamlFolder', function() {
 
     describe('by default', function() {
       beforeEach(function() {
-        this.folder = new this.ramlRepository.RamlFolder('/folder/', this.meta);
+        this.folder = new this.ramlRepository.RamlFolder('/folder', this.meta);
       });
 
       it('sets the path', function() {
-        this.folder.path.should.eql('/folder/');
+        this.folder.path.should.eql('/folder');
       });
 
       it('sets the name', function() {
@@ -58,13 +58,13 @@ describe('ramlRepository.RamlFolder', function() {
       });
     });
 
-    describe('when the provided path does not end with a slash', function() {
+    describe('when the provided path ends with a slash', function() {
       beforeEach(function() {
-        this.folder = new this.ramlRepository.RamlFolder('/folder', this.meta);
+        this.folder = new this.ramlRepository.RamlFolder('/folder/', this.meta);
       });
 
       it('ensures the path ends in a slash', function() {
-        this.folder.path.should.eql('/folder/');
+        this.folder.path.should.eql('/folder');
       });
     });
 
