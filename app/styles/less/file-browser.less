@@ -118,18 +118,15 @@
 
 /* Light theme */
 div[role=raml-editor].light [role=browser] {
-  color: rgb(202,204,212);
 
-  ul[role=file-list] {
-    background-color: white;
-    color: #aaa;
-    background-color: white;
-    border: 1px solid rgb(131,148,150);
+  ul.file-list {
+    background-color: #f1f1f1;
+    color: #888;
 
-    li {
+    .file-item {
       &:not(.currentfile):hover {
         color: #eee;
-        background-color: #caccd4;
+        background-color: #b9bbc3;
       }
 
       &.currentfile {
