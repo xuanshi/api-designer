@@ -42,6 +42,7 @@
     "xit": false,
     "compileTemplate": false,
     "events": false,
-    "promise": false
+    "promise": false,
+    "RAML": false
   }
 }

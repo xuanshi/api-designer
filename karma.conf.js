@@ -40,6 +40,7 @@ module.exports = function(config) {
       'bower_components/raml-grammar/dist/suggest.js',
 
       'app/scripts/app.js',
+      'app/scripts/file-system.js',
       'app/scripts/services/utils.js',
       'app/scripts/services/config.js',
       'app/scripts/services/lightweight-dom.js',
