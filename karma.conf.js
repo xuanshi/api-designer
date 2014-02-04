@@ -41,6 +41,8 @@ module.exports = function(config) {
 
       'app/scripts/app.js',
       'app/scripts/file-system.js',
+      'app/scripts/file-system/file.js',
+      'app/scripts/file-system/folder.js',
       'app/scripts/services/utils.js',
       'app/scripts/services/config.js',
       'app/scripts/services/lightweight-dom.js',
