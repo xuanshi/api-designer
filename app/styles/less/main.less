@@ -120,18 +120,22 @@ div[role=flexColumns] {
   flex: 1;
 }
 
-div[role=editor] {
-  box-sizing: border-box;
-
-  transition: padding-bottom .05s ease-in;
-  background: rgb(11,11,13);
-
-  position: relative;
+.editorContainer {
   display: flex;
 
   flex-direction: column;
-
   flex: 1;
+}
+
+div[role=editor] {
+  position: relative;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+
+  transition: padding-bottom .05s ease-in;
+  background: rgb(11,11,13);
 }
 
 div[role=editor].error {

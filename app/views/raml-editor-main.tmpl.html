@@ -24,22 +24,24 @@
 
     <div id="browserAndEditor" ng-splitter="vertical" ng-splitter-collapse-target="prev"><div class="split split-left">&nbsp;</div></div>
 
-    <div role="editor" ng-class="{error: hasErrors}" ng-hide="projectEmpty">
-      <div id="code" role="code"></div>
+    <div class="editorContainer">
+      <div role="editor" ng-class="{error: hasErrors}" ng-hide="projectEmpty">
+        <div id="code" role="code"></div>
 
-      <div role="shelf" ng-show="getIsShelfVisible()" ng-class="{expanded: !shelf.collapsed}">
-        <div role="shelf-tab" ng-click="toggleShelf()">
-          <i class="icon-inbox icon-large"></i><i ng-class="shelf.collapsed ? 'icon-caret-up' : 'icon-caret-down'"></i>
+        <div role="shelf" ng-show="getIsShelfVisible()" ng-class="{expanded: !shelf.collapsed}">
+          <div role="shelf-tab" ng-click="toggleShelf()">
+            <i class="icon-inbox icon-large"></i><i ng-class="shelf.collapsed ? 'icon-caret-up' : 'icon-caret-down'"></i>
+          </div>
+
+          <div role="shelf-container" ng-show="!shelf.collapsed" ng-include src="'views/raml-editor-shelf.tmpl.html'"></div>
         </div>
-
-        <div role="shelf-container" ng-show="!shelf.collapsed" ng-include src="'views/raml-editor-shelf.tmpl.html'"></div>
       </div>
-    </div>
-    <div role="editor" class="empty-project" ng-show="projectEmpty">
-      <h2>Your project is empty</h2>
-      <ul>
-        <li>create a new file with &#8679;&#8997;N</li>
-      </ul>
+      <div role="editor" class="empty-project" ng-show="projectEmpty">
+        <h2>Your project is empty</h2>
+        <ul>
+          <li>create a new file with &#8679;&#8997;N</li>
+        </ul>
+      </div>
     </div>
 
     <div id="consoleAndEditor" ng-show="getIsConsoleVisible()" ng-splitter="vertical" ng-splitter-collapse-target="next"><div class="split split-right">&nbsp;</div></div>
