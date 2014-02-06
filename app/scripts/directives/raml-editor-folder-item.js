@@ -1,27 +1,50 @@
 /* jshint newcap: false */
 (function() {
   'use strict';
-  angular.module('ramlEditorApp').directive('ramlEditorFolderItem', function($compile, ramlEditorFilenamePrompt) {
+  angular.module('ramlEditorApp').directive('ramlEditorFolderItem', function($compile, $window, ramlEditorFilenamePrompt) {
     function Actions(folder) {
-      return [
-        {
-          label: 'New Folder',
-          execute: function() {
-            ramlEditorFilenamePrompt.folderName(folder).then(function(filename) {
-              folder.createFolder(filename);
-            });
-          }
-        },
-
-        {
-          label: 'New File',
-          execute: function() {
-            ramlEditorFilenamePrompt.fileName(folder).then(function(filename) {
-              folder.createFile(filename);
-            });
-          }
+      var actions = [];
+      actions.push({
+        label: 'New Folder',
+        execute: function() {
+          ramlEditorFilenamePrompt.folderName(folder).then(function(filename) {
+            folder.createFolder(filename);
+          });
         }
-      ];
+      });
+
+      if (folder.remove) {
+        actions.push({
+          label: 'Remove Folder',
+          execute: function() {
+            var containedFileCount = folder.containedFiles().length,
+                message = 'Are you sure you want to delete "' + folder.name + '"';
+
+            if (containedFileCount > 0) {
+              message = message + ' and ' + containedFileCount + ' contained file';
+              if (containedFileCount > 1) {
+                message = message + 's';
+              }
+            }
+
+            var confirmed = $window.confirm(message + '?');
+            if (confirmed) {
+              folder.remove();
+            }
+          }
+        });
+      }
+
+      actions.push({
+        label: 'New File',
+        execute: function() {
+          ramlEditorFilenamePrompt.fileName(folder).then(function(filename) {
+            folder.createFile(filename);
+          });
+        }
+      });
+
+      return actions;
     }
 
     return {

@@ -106,17 +106,6 @@ angular.module('fs')
       return true;
     }
 
-    function hasChildrens(path) {
-      var has = false;
-      localStorageHelper.forEach(function (entry) {
-        if (entry.path.toLowerCase() !== path.toLowerCase() &&
-            entry.path.indexOf(path) === 0) {
-          has = true;
-        }
-      });
-      return has;
-    }
-
     function extractNameFromPath(path) {
       var pathInfo = validatePath(path);
 
@@ -260,13 +249,19 @@ angular.module('fs')
       var deferred = $q.defer();
       var entry = localStorageHelper.get(path);
 
-      if(entry && entry.type === FOLDER && hasChildrens(path)) {
-        deferred.reject('folder not empty');
-        return deferred.promise;
+      var childrenRemoved;
+      if(entry && entry.type === FOLDER) {
+        var folder = findFolder(entry.path);
+        var promises = folder.children.map(function(child) { return service.remove(child.path); });
+        childrenRemoved = $q.all(promises);
+      } else {
+        childrenRemoved = $q.when();
       }
 
-      localStorageHelper.remove(path);
-      deferred.resolve();
+      childrenRemoved.then(function() {
+        localStorageHelper.remove(path);
+        deferred.resolve();
+      });
 
       return deferred.promise;
     };

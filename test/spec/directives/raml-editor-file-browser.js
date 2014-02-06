@@ -33,6 +33,7 @@ describe('ramlEditorFileBrowser', function() {
     this.scope.$destroy();
     this.sandbox.restore();
     config.clear();
+    localStorage.clear();
   }));
 
   describe('when initialized', function() {
@@ -222,6 +223,76 @@ describe('ramlEditorFileBrowser', function() {
 
           it('creates a folder in the current folder', function() {
             this.createFolderStub.should.have.been.calledWith('folder');
+          });
+        });
+      });
+
+      describe('removing a folder', function() {
+        describe('which is the root folder', function() {
+          beforeEach(function() {
+            var folder = this.el[0].querySelectorAll('.file-item[role="folder"]')[0];
+            this.iconToClick = folder.querySelectorAll('.icon')[1];
+            this.iconToClick.dispatchEvent(events.click());
+          });
+
+          it('actually cannot be removed', function() {
+            should.not.exist(contextMenuItemNamed(this.el, 'Remove Folder'));
+          });
+        });
+
+        describe('which is not root', function() {
+          beforeEach(function() {
+            this.deferred = defer();
+            this.promptSpy = this.sandbox.stub(window, 'confirm');
+            this.removeFolderStub = this.sandbox.stub(this.root, 'removeFolder');
+          });
+
+          beforeEach(function(done) {
+            this.root.createFolder('subfolder').then(function(folder) {
+              folder.createFile('file.raml');
+            });
+
+            this.scope.$digest();
+            var context = this;
+            setTimeout(function waitForFileBrowserToUpdate() {
+              var subfolder = context.el[0].querySelectorAll('.file-item[role="folder"]')[1];
+
+              context.iconToClick = subfolder.querySelectorAll('.icon')[1];
+              context.iconToClick.dispatchEvent(events.click());
+              done();
+            });
+          });
+
+          describe('by default', function() {
+            beforeEach(function() {
+              contextMenuItemNamed(this.el, 'Remove Folder').dispatchEvent(events.click());
+            });
+
+            it('opens the filename prompt', function() {
+              this.promptSpy.should.have.been.calledWith('Are you sure you want to delete "subfolder" and 1 contained file?');
+            });
+          });
+
+          describe('upon confirmation', function() {
+            beforeEach(function() {
+              this.promptSpy.returns(true);
+              contextMenuItemNamed(this.el, 'Remove Folder').dispatchEvent(events.click());
+            });
+
+            it('removes the folder', function() {
+              this.removeFolderStub.should.have.been.called;
+            });
+          });
+
+          describe('upon cancellation', function() {
+            beforeEach(function() {
+              this.promptSpy.returns(false);
+              contextMenuItemNamed(this.el, 'Remove Folder').dispatchEvent(events.click());
+            });
+
+            it('aborts', function() {
+              this.removeFolderStub.should.not.have.been.called;
+            });
           });
         });
       });

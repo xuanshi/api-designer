@@ -233,16 +233,23 @@ describe('Local Storage File System', function() {
     });
 
     describe('remove', function() {
-      it('should not allow the removal of folders with childs', function(){
-        var error = sinon.stub();
-        localStorageFileSystem.remove('/folder').then(noop, error);
+      beforeEach(function(done) {
+        localStorageFileSystem.remove('/folder').then(done);
         digest();
-        error.called.should.be.ok;
       });
 
-      it('should remove an empty folder successfully', function(done) {
-        localStorageFileSystem.remove('/emptyFolder').then(done);
-        digest();
+      it('removes all sub folders and their contents', function() {
+        should.not.exist(localStorage.getItem(LOCAL_PERSISTENCE_KEY + './folder/subfolderA'));
+        should.not.exist(localStorage.getItem(LOCAL_PERSISTENCE_KEY + './folder/subfolderA/example.raml'));
+        should.not.exist(localStorage.getItem(LOCAL_PERSISTENCE_KEY + './folder/subfolderB'));
+      });
+
+      it('removes all contained files', function() {
+        should.not.exist(localStorage.getItem(LOCAL_PERSISTENCE_KEY));
+      });
+
+      it('removes the folder', function() {
+        should.not.exist(localStorage.getItem(LOCAL_PERSISTENCE_KEY + './folder'));
       });
     });
 
