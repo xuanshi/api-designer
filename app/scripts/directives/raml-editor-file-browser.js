@@ -1,7 +1,7 @@
 (function() {
   'use strict';
 
-  angular.module('ramlEditorApp').directive('ramlEditorFileBrowser', function($rootScope, $q, $window, ramlEditorFilenamePrompt, ramlRepository, config, eventService) {
+  angular.module('ramlEditorApp').directive('ramlEditorFileBrowser', function($rootScope, $q, $window, ramlEditorFilenamePrompt, fileSystem, config, eventService) {
     var controller = function($scope) {
       var unwatchSelectedFile = angular.noop, contextMenu;
       var saveListener = function(e) {
@@ -26,17 +26,17 @@
 
       $scope.fileBrowser = this;
 
-      ramlRepository.getFolder().then(function(folder) {
-        $scope.homeFolder = folder;
+      fileSystem.root.then(function(root) {
+        $scope.homeFolder = root;
 
-        if (folder.containedFiles().length > 0) {
+        if (root.containedFiles().length > 0) {
           var lastFile = config.get('currentFile', '');
 
-          var fileToOpen = folder.containedFiles().filter(function(file) {
+          var fileToOpen = root.containedFiles().filter(function(file) {
             return file.path === lastFile;
           })[0];
 
-          fileToOpen = fileToOpen || folder.files[0];
+          fileToOpen = fileToOpen || root.files[0];
 
           $scope.fileBrowser.selectFile(fileToOpen);
         } else {
@@ -83,7 +83,7 @@
         unwatchSelectedFile();
 
         var isLoaded = !file.persisted || angular.isString(file.contents);
-        var afterLoading = isLoaded ? $q.when(file) : ramlRepository.loadFile(file);
+        var afterLoading = isLoaded ? $q.when(file) : file.load();
 
         afterLoading.then(function(file) {
           $scope.fileBrowser.selectedFile = file;
@@ -97,7 +97,7 @@
       };
 
       this.saveFile = function(file) {
-        ramlRepository.saveFile(file).then(function success() {
+        file.save().then(function success() {
           eventService.broadcast('event:notification', {
             message: 'File saved.',
             expires: true

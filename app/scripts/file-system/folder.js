@@ -146,6 +146,18 @@
       return this.folders.filter(named)[0] || this.files.filter(named)[0];
     };
 
+    RamlFolder.prototype.fileOrFolderAtPath = function(path) {
+      var segments = path.split('/');
+
+      var item = this.fileOrFolderNamed(segments[0]);
+      if (!item || segments.length === 1) {
+        return item;
+      } else {
+        segments.shift();
+        return item.fileOrFolderAtPath(segments.join('/'));
+      }
+    };
+
     var Folder = {
       root: function(meta, contents) {
         var folder = new RamlFolder(meta, contents);

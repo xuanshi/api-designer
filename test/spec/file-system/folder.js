@@ -456,6 +456,32 @@ describe('RAML.FileSystem.Folder', function() {
         paths.should.include(path + 'alpha/alpha/file.raml');
       });
     });
+
+    describe('finding a file or folder by path', function() {
+      beforeEach(function() {
+        this.sandbox.stub(this.fileSystem, 'createFolder').returns(defer().promise);
+        function createFile(folder) {
+          folder.createFile('file.raml');
+        }
+
+        this.folder = createFolder();
+        this.folder.createFile('file.raml');
+
+        this.folder.createFolder('alpha');
+        this.folder.createFolder('beta');
+        this.folder.folders.forEach(createFile);
+
+        this.folder.folders[0].createFolder('alpha');
+        this.folder.folders[0].folders.forEach(createFile);
+      });
+
+      it('returns the file or folder at that path', function() {
+        this.folder.fileOrFolderAtPath('file.raml').should.eql(this.folder.files[0]);
+        this.folder.fileOrFolderAtPath('alpha/file.raml').should.eql(this.folder.folders[0].files[0]);
+        this.folder.fileOrFolderAtPath('alpha/alpha/file.raml').should.eql(this.folder.folders[0].folders[0].files[0]);
+        should.not.exist(this.folder.fileOrFolderAtPath('not/a/thing'));
+      });
+    });
   }
 
   describe('#root', function() {

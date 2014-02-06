@@ -1,135 +1,136 @@
 describe('ramlEditorFileBrowser', function() {
   'use strict';
+  beforeEach(module('ramlEditorApp'));
 
-  var scope, el, sandbox, ramlRepository;
-
-  function createMockFile(name, options) {
-    options = options || {};
-
-    return {
-      name: name,
-      path: '/' + name,
-      dirty: !!options.dirty,
-      persisted: options.persisted || true,
-      contents: options.contents
-    };
-  }
-
-  function compileFileBrowser() {
-    el = compileTemplate('<raml-editor-file-browser></raml-editor-file-browser>', scope);
+  function compileFileBrowser(scope) {
+    var el = compileTemplate('<raml-editor-file-browser></raml-editor-file-browser>', scope);
     document.body.appendChild(el[0]);
+
+    return el;
   }
 
-  angular.module('fileBrowserTest', ['ramlEditorApp', 'testFs']);
-  beforeEach(module('fileBrowserTest'));
-
-  beforeEach(inject(function($rootScope, $injector) {
-    sandbox = sinon.sandbox.create();
-    scope = $rootScope.$new();
-    ramlRepository = $injector.get('ramlRepository');
+  var defer;
+  beforeEach(inject(function($q) {
+    defer = function() {
+      return $q.defer();
+    };
   }));
 
+  beforeEach(function(done) {
+    var context = this;
+    inject(function($rootScope, fileSystem) {
+      context.sandbox = sinon.sandbox.create();
+      context.scope = $rootScope.$new();
+      fileSystem.root.then(function(root) {
+        context.root = root;
+        done();
+      });
+      context.scope.$digest();
+    });
+  });
+
   afterEach(inject(function(config) {
-    scope.$destroy();
-    el = scope = ramlRepository = undefined;
-    sandbox.restore();
+    this.scope.$destroy();
+    this.sandbox.restore();
     config.clear();
   }));
 
   describe('when initialized', function() {
     describe('by default', function() {
+      beforeEach(function() {
+        this.root.createFile('alpha');
+        this.root.createFile('beta');
+        compileFileBrowser(this.scope);
+      });
+
       it('selects the first file', function() {
-        ramlRepository.files = [createMockFile('firstFile'), createMockFile('lastFile')];
-        compileFileBrowser();
-        scope.fileBrowser.selectedFile.name.should.equal('firstFile');
+        this.scope.fileBrowser.selectedFile.name.should.equal('alpha');
       });
     });
 
     describe('with a previous file selected', function() {
       beforeEach(inject(function(config) {
-        ramlRepository.files = [createMockFile('lastFile'), createMockFile('firstFile')];
-        var fileToOpen = ramlRepository.files[0];
+        this.root.createFile('alpha');
+        this.root.createFile('beta');
+        config.set('currentFile', this.root.files[1].path);
 
-        config.set('currentFile', fileToOpen.path);
-        compileFileBrowser();
+        compileFileBrowser(this.scope);
       }));
 
       it('selects the previously selected file', function() {
-        scope.fileBrowser.selectedFile.name.should.equal('lastFile');
+        this.scope.fileBrowser.selectedFile.name.should.equal('beta');
       });
     });
 
     describe('when there are no files', function() {
-      var createFileStub;
-
       beforeEach(function() {
-        ramlRepository.files = [];
-        createFileStub = sinon.spy(ramlRepository.folders[0], 'createFile');
+        this.createFileStub = this.sandbox.spy(this.root, 'createFile');
+        compileFileBrowser(this.scope);
       });
 
       it('creates an \'Untitled-1.raml\' file', function() {
-        compileFileBrowser();
-        createFileStub.should.have.been.calledWith('Untitled-1.raml');
+        this.createFileStub.should.have.been.calledWith('Untitled-1.raml');
       });
     });
   });
 
   describe('clicking a file', function() {
-    var fileToClick;
-
     beforeEach(function() {
-      ramlRepository.files = [createMockFile('file1'), createMockFile('file2')];
-      compileFileBrowser();
-      fileToClick = el[0].querySelectorAll('.file-item[role="file"]')[1];
+      this.root.createFile('alpha');
+      this.root.createFile('beta');
+      this.el = compileFileBrowser(this.scope);
+      this.fileToClick = this.el[0].querySelectorAll('.file-item[role="file"]')[1];
 
-      sandbox.spy(ramlRepository, 'loadFile');
+      this.sandbox.spy(this.root.files[1], 'load');
     });
 
     describe('by default', function() {
       beforeEach(function() {
-        angular.element(fileToClick).triggerHandler('click');
+        angular.element(this.fileToClick).triggerHandler('click');
       });
 
       it('updates selectedFile to the file clicked', function() {
-        scope.fileBrowser.selectedFile.name.should.equal('file2');
+        this.scope.fileBrowser.selectedFile.name.should.equal('beta');
       });
 
       it('updates the currentFile stored in config', inject(function(config) {
-        config.get('currentFile').should.equal('/file2');
+        config.get('currentFile').should.equal('/beta');
       }));
 
       it('adds the "currentfile" class to the file clicked', function() {
-        fileToClick.classList.contains('currentfile').should.be.true;
+        this.fileToClick.classList.contains('currentfile').should.be.true;
       });
 
       it('removes the "currentfile" class from all other files', function() {
-        el[0].querySelectorAll('.currentfile').length.should.equal(1);
+        this.el[0].querySelectorAll('.currentfile').length.should.equal(1);
       });
     });
 
     describe('when the file is not loaded', function() {
+      beforeEach(function() {
+        this.root.files[1].contents = undefined;
+        this.root.files[1].persisted = true;
+      });
       it('loads the file content', function() {
-        angular.element(fileToClick).triggerHandler('click');
-        ramlRepository.loadFile.should.have.been.called;
+        angular.element(this.fileToClick).triggerHandler('click');
+        this.root.files[1].load.should.have.been.called;
       });
     });
 
     describe('when the file is loaded', function() {
       beforeEach(function() {
-        ramlRepository.files[1].contents = 'raml';
-        angular.element(fileToClick).triggerHandler('click');
+        this.root.files[1].contents = 'raml';
+        angular.element(this.fileToClick).triggerHandler('click');
       });
 
       it('does not load the file content', function() {
-        ramlRepository.loadFile.should.not.have.been.called;
+        this.root.files[1].load.should.not.have.been.called;
       });
     });
   });
 
   describe('opening the context menu', function() {
-    var iconToClick;
-
-    function contextMenuItemNamed(name) {
+    function contextMenuItemNamed(el, name) {
       var contextMenu = angular.element(el[0].querySelector('[role="context-menu"]'));
 
       return Array.prototype.slice.call(contextMenu.children()).filter(function(child) {
@@ -139,203 +140,188 @@ describe('ramlEditorFileBrowser', function() {
 
     describe('for a folder', function() {
       beforeEach(function() {
-        ramlRepository.files = [createMockFile('file1'), createMockFile('file2')];
-        compileFileBrowser();
-        iconToClick = el[0].querySelectorAll('.file-item[role="folder"] .icon')[1];
+        this.root.createFile('file1');
+        this.root.createFile('file2');
+        this.el = compileFileBrowser(this.scope);
+        this.iconToClick = this.el[0].querySelectorAll('.file-item[role="folder"] .icon')[1];
       });
 
       describe('by default', function() {
         beforeEach(function() {
-          scope.fileBrowser.selectedFile.name.should.equal('file1');
-          iconToClick.dispatchEvent(events.click());
+          this.scope.fileBrowser.selectedFile.name.should.equal('file1');
+          this.iconToClick.dispatchEvent(events.click());
         });
 
         it('does not update the selectedFile', function() {
-          scope.fileBrowser.selectedFile.name.should.equal('file1');
+          this.scope.fileBrowser.selectedFile.name.should.equal('file1');
         });
 
         it('adds the "geared" class to the file clicked', function() {
-          iconToClick.parentElement.classList.contains('geared').should.be.true;
+          this.iconToClick.parentElement.classList.contains('geared').should.be.true;
         });
 
         it('opens the context menu', function() {
-          var rect = el[0].querySelector('[role="context-menu"]').getBoundingClientRect();
+          var rect = this.el[0].querySelector('[role="context-menu"]').getBoundingClientRect();
           rect.height.should.be.greaterThan(0);
         });
       });
 
       describe('creating a file', function() {
-        var createItem, createFileStub, promptSpy, filenamePromptStub;
-
         beforeEach(function() {
-          iconToClick.dispatchEvent(events.click());
-          inject(function(ramlRepository, ramlEditorFilenamePrompt) {
-            createFileStub = sandbox.stub(ramlRepository.folders[0], 'createFile');
-            filenamePromptStub = sandbox.stub(ramlEditorFilenamePrompt, 'fileName');
+          var context = this;
+          inject(function(ramlEditorFilenamePrompt) {
+            context.deferred = defer();
+            context.promptSpy = context.sandbox.stub(window, 'prompt');
+            context.createFileStub = context.sandbox.stub(context.root, 'createFile');
+            context.filenamePromptStub = context.sandbox.stub(ramlEditorFilenamePrompt, 'fileName').returns(context.deferred.promise);
           });
-          promptSpy = sandbox.stub(window, 'prompt');
 
-          createItem = contextMenuItemNamed('New File');
+          this.iconToClick.dispatchEvent(events.click());
+          contextMenuItemNamed(this.el, 'New File').dispatchEvent(events.click());
         });
 
         it('opens the filenamePrompt', function() {
-          filenamePromptStub.returns(promise.stub());
-          createItem.dispatchEvent(events.click());
-
-          filenamePromptStub.should.have.been.calledWith(scope.homeFolder);
+          this.filenamePromptStub.should.have.been.calledWith(this.scope.homeFolder);
         });
 
         describe('upon success', function() {
           beforeEach(function() {
-            filenamePromptStub.returns(promise.resolved('NewName.raml'));
-            createItem.dispatchEvent(events.click());
+            this.deferred.resolve('NewName.raml');
+            this.scope.$digest();
           });
 
           it('creates a file in the current folder', function() {
-            createFileStub.should.have.been.calledWith('NewName.raml');
+            this.createFileStub.should.have.been.calledWith('NewName.raml');
           });
         });
       });
 
       describe('creating a folder', function() {
-        var createItem, createFolderStub, promptSpy, filenamePromptStub;
-
         beforeEach(function() {
-          iconToClick.dispatchEvent(events.click());
-          inject(function(ramlRepository, ramlEditorFilenamePrompt) {
-            createFolderStub = sandbox.stub(ramlRepository.folders[0], 'createFolder');
-            filenamePromptStub = sandbox.stub(ramlEditorFilenamePrompt, 'folderName');
+          var context = this;
+          inject(function(ramlEditorFilenamePrompt) {
+            context.deferred = defer();
+            context.promptSpy = context.sandbox.stub(window, 'prompt');
+            context.createFolderStub = context.sandbox.stub(context.root, 'createFolder');
+            context.filenamePromptStub = context.sandbox.stub(ramlEditorFilenamePrompt, 'folderName').returns(context.deferred.promise);
           });
-          promptSpy = sandbox.stub(window, 'prompt');
 
-          createItem = contextMenuItemNamed('New Folder');
+          this.iconToClick.dispatchEvent(events.click());
+          contextMenuItemNamed(this.el, 'New Folder').dispatchEvent(events.click());
         });
 
         it('opens the filename prompt', function() {
-          filenamePromptStub.returns(promise.stub());
-          createItem.dispatchEvent(events.click());
-
-          filenamePromptStub.should.have.been.calledWith(scope.homeFolder);
+          this.filenamePromptStub.should.have.been.calledWith(this.scope.homeFolder);
         });
 
         describe('upon success', function() {
           beforeEach(function() {
-            filenamePromptStub.returns(promise.resolved('folder'));
-            createItem.dispatchEvent(events.click());
+            this.deferred.resolve('folder');
+            this.scope.$digest();
           });
 
           it('creates a folder in the current folder', function() {
-            createFolderStub.should.have.been.calledWith('folder');
+            this.createFolderStub.should.have.been.calledWith('folder');
           });
         });
       });
     });
 
     describe('for a file', function() {
-      var file;
-
       beforeEach(function() {
-        ramlRepository.files = [createMockFile('file1'), createMockFile('file2')];
-        compileFileBrowser();
-        iconToClick = el[0].querySelectorAll('.file-item[role="file"] .icon')[0];
-        file = ramlRepository.files[0];
+        this.root.createFile('file1');
+        this.root.createFile('file2');
+        this.el = compileFileBrowser(this.scope);
+        this.iconToClick = this.el[0].querySelectorAll('.file-item[role="file"] .icon')[0];
 
-        sandbox.spy(ramlRepository, 'loadFile');
+        this.file = this.root.files[0];
+        this.sandbox.spy(this.file, 'load');
       });
 
       describe('by default', function() {
         beforeEach(function() {
-          scope.fileBrowser.selectedFile.name.should.equal('file1');
-          iconToClick.dispatchEvent(events.click());
+          this.scope.fileBrowser.selectedFile.name.should.equal('file1');
+          this.iconToClick.dispatchEvent(events.click());
         });
 
         it('does not update the selectedFile', function() {
-          scope.fileBrowser.selectedFile.name.should.equal('file1');
+          this.scope.fileBrowser.selectedFile.name.should.equal('file1');
         });
 
         it('adds the "geared" class to the file clicked', function() {
-          iconToClick.parentElement.classList.contains('geared').should.be.true;
+          this.iconToClick.parentElement.classList.contains('geared').should.be.true;
         });
 
         it('opens the context menu', function() {
-          var rect = el[0].querySelector('[role="context-menu"]').getBoundingClientRect();
+          var rect = this.el[0].querySelector('[role="context-menu"]').getBoundingClientRect();
           rect.height.should.be.greaterThan(0);
         });
       });
 
       describe('saving a file', function() {
-        var saveFileSpy;
+        beforeEach(function() {
+          this.saveFileSpy = this.sandbox.spy(this.file, 'save');
 
-        beforeEach(inject(function(ramlRepository) {
-          iconToClick.dispatchEvent(events.click());
-          saveFileSpy = sinon.spy(ramlRepository, 'saveFile');
-          var saveItem = contextMenuItemNamed('Save');
+          this.iconToClick.dispatchEvent(events.click());
+          contextMenuItemNamed(this.el, 'Save').dispatchEvent(events.click());
+        });
 
-          saveItem.dispatchEvent(events.click());
-        }));
-
-        it('delegates to the ramlRepository', function() {
-          saveFileSpy.should.have.been.calledWith(file);
+        it('delegates to the fileSystem', function() {
+          this.saveFileSpy.should.have.been.called;
         });
       });
 
       describe('removing a file', function() {
-        var openStub;
-
         beforeEach(inject(function(ramlEditorRemoveFilePrompt) {
-          iconToClick.dispatchEvent(events.click());
-          openStub = sinon.stub(ramlEditorRemoveFilePrompt, 'open');
-          var removeItem = contextMenuItemNamed('Delete');
+          this.openStub = this.sandbox.stub(ramlEditorRemoveFilePrompt, 'open');
 
-          removeItem.dispatchEvent(events.click());
+          this.iconToClick.dispatchEvent(events.click());
+          contextMenuItemNamed(this.el, 'Delete').dispatchEvent(events.click());
         }));
 
-        it('delegates to the ramlRepository', function() {
-          openStub.should.have.been.calledWith(scope.homeFolder, file);
+        it('delegates to the fileSystem', function() {
+          this.openStub.should.have.been.calledWith(this.scope.homeFolder, this.file);
         });
       });
 
       describe('renaming', function() {
-        var renameItem, renameFileStub, promptSpy, filenamePromptStub;
-
         beforeEach(function() {
-          iconToClick.dispatchEvent(events.click());
-          inject(function(ramlRepository, ramlEditorFilenamePrompt) {
-            renameFileStub = sandbox.stub(ramlRepository, 'renameFile');
-            filenamePromptStub = sandbox.stub(ramlEditorFilenamePrompt, 'fileName');
+          var context = this;
+          inject(function(fileSystem, ramlEditorFilenamePrompt) {
+            context.deferred = defer();
+            context.promptSpy = context.sandbox.stub(window, 'prompt');
+            context.renameFileStub = context.sandbox.stub(context.root, 'renameFile');
+            context.filenamePromptStub = context.sandbox.stub(ramlEditorFilenamePrompt, 'fileName').returns(context.deferred.promise);
           });
-          promptSpy = sandbox.stub(window, 'prompt');
 
-          renameItem = contextMenuItemNamed('Rename');
+          this.iconToClick.dispatchEvent(events.click());
+          contextMenuItemNamed(this.el, 'Rename').dispatchEvent(events.click());
         });
 
         it('opens the filenamePrompt with the file\'s current name', function() {
-          filenamePromptStub.returns(promise.stub());
-          renameItem.dispatchEvent(events.click());
-
-          filenamePromptStub.should.have.been.calledWith(scope.homeFolder, file.name);
+          this.filenamePromptStub.should.have.been.calledWith(this.scope.homeFolder, this.file.name);
         });
 
         describe('upon success', function() {
           beforeEach(function() {
-            filenamePromptStub.returns(promise.resolved('NewName.raml'));
-            renameItem.dispatchEvent(events.click());
+            this.deferred.resolve('NewName.raml');
+            this.scope.$digest();
           });
 
-          it('renames the file in the ramlRepository', function() {
-            renameFileStub.should.have.been.calledWith(file, 'NewName.raml');
+          it('renames the file in the fileSystem', function() {
+            this.renameFileStub.should.have.been.calledWith(this.file, 'NewName.raml');
           });
 
         });
 
         describe('upon failure', function() {
           beforeEach(function() {
-            filenamePromptStub.returns(promise.rejected());
-            renameItem.dispatchEvent(events.click());
+            this.deferred.reject();
+            this.scope.$digest();
           });
 
           it('does not rename the file', function() {
-            renameFileStub.should.not.have.been.called;
+            this.renameFileStub.should.not.have.been.called;
           });
         });
       });
@@ -343,154 +329,131 @@ describe('ramlEditorFileBrowser', function() {
   });
 
   describe('when a new file is created', function() {
-    beforeEach(inject(function($rootScope) {
-      compileFileBrowser();
-      $rootScope.$broadcast('event:raml-editor-file-created', createMockFile('filenameOfTheNewFile'));
-      scope.$digest();
-    }));
+    beforeEach(function() {
+      this.root.createFile('file1');
+      this.root.createFile('file2');
+      compileFileBrowser(this.scope);
+
+      var file = this.root.files[1];
+      inject(function($rootScope) {
+        $rootScope.$broadcast('event:raml-editor-file-created', file);
+        $rootScope.$digest();
+      });
+    });
 
     it('selects the file', function() {
-      scope.fileBrowser.selectedFile.name.should.equal('filenameOfTheNewFile');
+      this.scope.fileBrowser.selectedFile.name.should.equal('file2');
     });
   });
 
   describe('removing a file', function() {
-    beforeEach(inject(function(ramlRepository) {
-      ramlRepository.files.push(createMockFile('some.raml'));
-      compileFileBrowser();
-    }));
+    beforeEach(function() {
+      this.root.createFile('alpha.raml');
+      compileFileBrowser(this.scope);
+    });
 
     describe('when it is the last file', function() {
-      var broadcastStub;
-
-      beforeEach(inject(function($rootScope, ramlRepository) {
-        var removed = ramlRepository.files.pop();
-        broadcastStub = sinon.spy($rootScope, '$broadcast');
+      beforeEach(inject(function($rootScope) {
+        var removed = this.root.files.pop();
+        this.broadcastStub = this.sandbox.spy($rootScope, '$broadcast');
         $rootScope.$broadcast('event:raml-editor-file-removed', removed);
-
         $rootScope.$digest();
       }));
 
       it('prompts the user to create a new file', function() {
-        broadcastStub.should.have.been.calledWith('event:raml-editor-project-empty');
+        this.broadcastStub.should.have.been.calledWith('event:raml-editor-project-empty');
       });
     });
 
     describe('when it is the selected file', function() {
       beforeEach(inject(function($rootScope) {
-        var removed = scope.fileBrowser.selectedFile = createMockFile('old.raml');
+        this.root.createFile('beta.raml');
+        var removed = this.scope.fileBrowser.selectedFile = this.root.files.pop();
 
         $rootScope.$broadcast('event:raml-editor-file-removed', removed);
-        scope.$digest();
+        $rootScope.$digest();
       }));
 
       it('selects the first file from the fileList', function() {
-        scope.fileBrowser.selectedFile.name.should.equal('some.raml');
+        this.scope.fileBrowser.selectedFile.name.should.equal('alpha.raml');
       });
     });
   });
 
   describe('saving a file', function() {
-    var saveSpy;
-
     beforeEach(function() {
-      ramlRepository.files = [createMockFile('file1'), createMockFile('file2')];
-      compileFileBrowser();
-      var fileToSave = el[0].querySelectorAll('.file-item[role="file"]')[1];
-      angular.element(fileToSave).triggerHandler('click');
-      saveSpy = sandbox.spy(ramlRepository, 'saveFile');
+      this.root.createFile('some.raml');
+      this.sandbox.spy(this.root.files[0], 'save');
+
+      compileFileBrowser(this.scope);
     });
 
     it('saves when meta-s is pressed', function() {
       var event = events.keydown(83, { metaKey: true});
       document.dispatchEvent(event);
-      saveSpy.should.have.been.calledWith(ramlRepository.files[1]);
+      this.root.files[0].save.should.have.been.called;
     });
 
     it('saves when ctrl-s is pressed', function() {
       var event = events.keydown(83, { ctrlKey: true});
       document.dispatchEvent(event);
-      saveSpy.should.have.been.calledWith(ramlRepository.files[1]);
+      this.root.files[0].save.should.have.been.called;
     });
   });
 
   describe('creating a new file', function() {
-    var newSpy;
-
     beforeEach(inject(function(ramlEditorFilenamePrompt) {
-      compileFileBrowser();
-      newSpy = sandbox.spy(ramlEditorFilenamePrompt, 'fileName');
+      compileFileBrowser(this.scope);
+      this.newSpy = this.sandbox.spy(ramlEditorFilenamePrompt, 'fileName');
     }));
 
     it('prompts when shift-option-n is pressed', function() {
       var event = events.keydown(78, { altKey: true, shiftKey: true });
       document.dispatchEvent(event);
-      newSpy.should.have.been.called;
+      this.newSpy.should.have.been.called;
     });
   });
 
-
   describe('file list', function() {
-    it('displays', function() {
-      ramlRepository.files = [createMockFile('file1'), createMockFile('file2')];
-      compileFileBrowser();
+    beforeEach(function() {
+      this.root.createFile('bFile');
+      this.root.createFile('aFile');
+      this.root.files.forEach(function(file) { file.dirty = false; });
 
-      scope.homeFolder.files.length.should.equal(2);
-      scope.homeFolder.files[0].name.should.equal('file1');
-      scope.homeFolder.files[1].name.should.equal('file2');
-
-      el.text().should.contain('file1');
-      el.text().should.contain('file2');
+      this.el = compileFileBrowser(this.scope);
     });
 
-    describe('sorting', function() {
-      beforeEach(function() {
-        ramlRepository.files = [
-          createMockFile('xFile'),
-          createMockFile('yFile'),
-          createMockFile('aFile'),
-          createMockFile('bFile'),
-          createMockFile('zFile')
-        ];
-        compileFileBrowser();
-      });
+    it('displays', function() {
+      this.el.text().should.contain('aFile');
+      this.el.text().should.contain('bFile');
+    });
 
-      it('lists alphabetically', function() {
-        var match = el.text().match(/(\wFile)/mg);
-        match.should.deep.equal(['aFile', 'bFile', 'xFile', 'yFile', 'zFile']);
-      });
+    it('lists alphabetically', function() {
+      var match = this.el.text().match(/(\wFile)/mg);
+      match.should.deep.equal(['aFile', 'bFile']);
     });
 
     describe('dirty tracking', function() {
+      beforeEach(function() {
+        this.changingFile = this.scope.fileBrowser.selectedFile;
+        this.el[0].querySelectorAll('.dirty').length.should.eql(0);
+
+        this.changingFile.contents = 'dirty content';
+        this.scope.$digest();
+      });
+
       it('indicates unsaved files', function() {
-        ramlRepository.files = [ createMockFile('dirty', { dirty : true }) ];
-        compileFileBrowser();
-        var file = el[0].querySelector('.file-item[role="file"]');
+        var file = this.el[0].querySelectorAll('.file-item[role="file"]')[0];
         file.classList.contains('dirty').should.be.true;
       });
 
       it('indicates saved files', function() {
-        ramlRepository.files = [ createMockFile('saved') ];
-        compileFileBrowser();
-        var file = el[0].querySelector('.file-item');
-
+        var file = this.el[0].querySelectorAll('.file-item[role="file"]')[1];
         file.classList.contains('dirty').should.be.false;
       });
 
       it('marks the selected file dirty when its contents change', function() {
-        var file = createMockFile('clean');
-        ramlRepository.files = [file];
-        compileFileBrowser();
-
-        scope.fileBrowser.selectFile(file);
-        scope.$digest();
-
-        file.dirty.should.be.false;
-
-        file.contents = 'dirty content';
-        scope.$digest();
-
-        file.dirty.should.be.true;
+        this.changingFile.dirty.should.be.true;
       });
     });
   });

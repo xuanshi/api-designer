@@ -2,51 +2,51 @@
 
 angular.module('ramlEditorApp')
   .constant('UPDATE_RESPONSIVENESS_INTERVAL', 800)
-  .service('ramlParserFileReader', function ($http, ramlParser, ramlRepository, safeApplyWrapper) {
+  .service('ramlParserFileReader', function ($q, $http, ramlParser, fileSystem, safeApplyWrapper) {
     function readLocFile(path) {
-      return ramlRepository.loadFile({path: path}).then(
-        function success(file) {
-          return file.contents;
+      return fileSystem.root.then(function success(root) {
+        var file = root.fileOrFolderAtPath(path.slice(1)), contents = $q.when();
+        if (file) {
+          contents = file.load().then(function() {
+            return file.contents;
+          });
         }
-      );
+
+        return contents;
+      });
     }
 
     function readExtFile(path) {
-      return $http.get(path).then(
-        // success
-        function success(response) {
-          return response.data;
-        },
+      function returnContents(response) {
+        return response.data;
+      }
 
-        // failure
-        function failure(response) {
-          var error = 'cannot fetch ' + path + ', check that the server is up and that CORS is enabled';
-          if (response.status) {
-            error += '(HTTP ' + response.status + ')';
-          }
-
-          throw error;
+      function explainTheProblem(response) {
+        var error = 'cannot fetch ' + path + ', check that the server is up and that CORS is enabled';
+        if (response.status) {
+          error += '(HTTP ' + response.status + ')';
         }
-      );
+
+        throw error;
+      }
+
+      return $http.get(path).then(returnContents, explainTheProblem);
     }
 
     this.readFileAsync = safeApplyWrapper(null, function readFileAsync(file) {
       var deferredSrc = /^https?:\/\//.test(file) ? readExtFile(file) : readLocFile(file);
-      var deferredDst = new ramlParser.RamlParser({}).q.defer();
+      var deferredDst = $q.defer();
 
       deferredSrc.then(
-        // success
         deferredDst.resolve.bind(deferredDst),
-
-        // failure
-        deferredDst. reject.bind(deferredDst)
+        deferredDst.reject.bind(deferredDst)
       );
 
       return deferredDst.promise;
     });
   })
   .controller('ramlEditorMain', function (UPDATE_RESPONSIVENESS_INTERVAL, $scope, $rootScope, $timeout, $window,
-    safeApply, safeApplyWrapper, debounce, throttle, ramlHint, ramlParser, ramlParserFileReader, ramlRepository, eventService, codeMirror,
+    safeApply, safeApplyWrapper, debounce, throttle, ramlHint, ramlParser, ramlParserFileReader, eventService, codeMirror,
     codeMirrorErrors, config, $prompt, $confirm, $modal
   ) {
     var editor, currentFile, extractCurrentFileLabel = function(file) {

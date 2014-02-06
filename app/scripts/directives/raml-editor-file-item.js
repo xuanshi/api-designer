@@ -1,13 +1,13 @@
 /* jshint newcap: false */
 (function() {
   'use strict';
-  angular.module('ramlEditorApp').directive('ramlEditorFileItem', function(ramlRepository, ramlEditorRemoveFilePrompt, ramlEditorFilenamePrompt) {
+  angular.module('ramlEditorApp').directive('ramlEditorFileItem', function(fileSystem, ramlEditorRemoveFilePrompt, ramlEditorFilenamePrompt) {
     function Actions(folder, file) {
       return [
         {
           label: 'Save',
           execute: function() {
-            ramlRepository.saveFile(file);
+            file.save();
           }
         },
         {
@@ -20,7 +20,7 @@
           label: 'Rename',
           execute: function() {
             ramlEditorFilenamePrompt.fileName(folder, file.name).then(function(filename) {
-              ramlRepository.renameFile(file, filename);
+              folder.renameFile(file, filename);
             });
           }
         }

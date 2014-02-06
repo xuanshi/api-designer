@@ -4,7 +4,7 @@ var codeMirror, eventService, codeMirrorErrors,
   $rootScope, $controller, $q, applySuggestion;
 
 describe('RAML Editor Main Controller', function () {
-  var params, ctrl, scope, annotationsToDisplay, editor, $timeout, $confirm, $window, ramlRepository, sandbox;
+  var params, ctrl, scope, annotationsToDisplay, editor, $timeout, $confirm, $window, fileSystem, sandbox;
 
   beforeEach(module('ramlEditorApp'));
 
@@ -26,7 +26,7 @@ describe('RAML Editor Main Controller', function () {
     codeMirror = $injector.get('codeMirror');
     eventService = $injector.get('eventService');
     applySuggestion = $injector.get('applySuggestion');
-    ramlRepository = $injector.get('ramlRepository');
+    fileSystem = $injector.get('fileSystem');
   }));
 
   beforeEach(function () {
@@ -204,27 +204,26 @@ describe('RAML Editor Main Controller', function () {
   });
 
   describe('parsing RAML definition', function () {
-    it('should use ramlParserFileReader to load included local files using ramlRepository', function (done) {
-      //
+    var root, fileToLoad;
+    beforeEach(function(done) {
+      inject(function($rootScope, fileSystem) {
+        fileSystem.root.then(function(folder) {
+          root = folder;
+          fileToLoad = root.createFile('2.raml');
+        }).then(done);
+        $rootScope.$digest();
+      });
+    });
+
+    it('should use ramlParserFileReader to load included local files using fileSystem', function (done) {
       $controller('ramlEditorMain', params);
-
-      // arrange
-      var loadFileDeferred = $q.defer();
-      var loadFileStub     = sinon.stub(ramlRepository, 'loadFile', function (file) {
-        // assert
-        file.path.should.be.equal('/2.raml');
-
-        // restore
-        loadFileStub.restore();
-
-        // done
+      sandbox.spy(root, 'fileOrFolderAtPath');
+      sandbox.stub(fileToLoad, 'load', function() {
+        root.fileOrFolderAtPath.should.have.been.calledWith('2.raml');
         done();
-
-        // return something to manage unhandled exception
-        return loadFileDeferred.promise;
+        return $q.defer().promise;
       });
 
-      // act
       scope.loadRaml([
         '#%RAML 0.8',
         '---',
