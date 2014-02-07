@@ -137,7 +137,7 @@ describe('RAML.FileSystem.Folder', function() {
         });
 
         it('retains the new folder', function() {
-          this.folder.folders.should.include(this.newFolder);
+          this.folder.folders[0].path.should.equal(this.newFolder.path);
         });
       });
 
