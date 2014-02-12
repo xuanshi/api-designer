@@ -25,6 +25,7 @@ describe('RAML.FileSystem.Folder', function() {
 
   afterEach(function() {
     this.sandbox.restore();
+    File = Folder = undefined;
   });
 
   function verifyFolderBehaviors(path, createFolder) {
@@ -413,6 +414,96 @@ describe('RAML.FileSystem.Folder', function() {
       });
     });
 
+    describe('moving a file to another folder', function() {
+      beforeEach(function() {
+        this.folder = createFolder();
+        this.file = this.folder.createFile('beta.raml');
+
+        this.deferred = defer();
+        this.sandbox.stub(this.fileSystem, 'rename').returns(this.deferred.promise);
+      });
+
+      describe('when the destination folder exists', function() {
+        beforeEach(function() {
+          this.sandbox.stub(this.fileSystem, 'createFolder').returns(defer().promise);
+          this.folder.createFolder('subFolder');
+          this.subFolder = this.folder.folders[0];
+        });
+
+        describe('by default', function() {
+          beforeEach(function() {
+            this.successSpy = this.sandbox.spy();
+            this.file.persisted = true;
+            this.folder.moveFile(this.file, this.subFolder.path).then(this.successSpy);
+          });
+
+          it('removes the file from the original folder', function() {
+            this.folder.files.length.should.eql(0);
+          });
+
+          it('adds the file from the destination folder', function() {
+            this.subFolder.files.length.should.eql(1);
+            var movedFile = this.subFolder.files[0];
+
+            movedFile.path.should.eql(this.subFolder.path + '/' + this.file.name);
+            movedFile.name.should.eql(this.file.name);
+            movedFile.contents.should.eql(this.file.contents);
+            movedFile.persisted.should.eql(this.file.persisted);
+            movedFile.dirty.should.eql(this.file.dirty);
+          });
+
+          it('delegates to the file system', function() {
+            var movedFile = this.subFolder.files[0];
+            this.fileSystem.rename.should.have.been.calledWith(this.file.path, movedFile.path);
+          });
+
+          describe('on success', function() {
+            beforeEach(function() {
+              this.deferred.resolve();
+              digest();
+            });
+
+            it('yields the file', function() {
+              this.successSpy.should.have.been.called;
+            });
+          });
+
+          describe('on failure', function() {
+            beforeEach(function() {
+              this.deferred.reject('error!');
+              digest();
+            });
+
+            it('does not restore the file', function() {
+              this.folder.files.length.should.eq(0);
+            });
+
+            it('yields the error message', function() {
+              this.removedFile.error.should.eql('error!');
+            });
+          });
+        });
+
+        describe('when the file has not been persisted', function() {
+          beforeEach(function() {
+            this.folder.moveFile(this.file, this.subFolder.path);
+          });
+
+          it('does not delegate to the file system', function() {
+            this.fileSystem.rename.should.not.have.been.called;
+          });
+        });
+      });
+
+      describe('when the destination folder does not exist', function() {
+        it('throws', function() {
+          (function() {
+            this.folder.moveFile(this.file, '/unknown/path');
+          }.bind(this)).should.throw(Error);
+        });
+      });
+    });
+
     describe('querying for an item by name', function() {
       beforeEach(function() {
         this.folder = createFolder();
@@ -485,16 +576,18 @@ describe('RAML.FileSystem.Folder', function() {
   }
 
   describe('#root', function() {
-    beforeEach(function() {
-      this.folder = Folder.root(this.meta);
-    });
+    describe('by default', function() {
+      beforeEach(function() {
+        this.folder = Folder.root(this.meta);
+      });
 
-    it('sets the path', function() {
-      this.folder.path.should.eql('/');
-    });
+      it('sets the path', function() {
+        this.folder.path.should.eql('/');
+      });
 
-    it('sets the name', function() {
-      this.folder.name.should.eql('/');
+      it('sets the name', function() {
+        this.folder.name.should.eql('/');
+      });
     });
 
     verifyFolderBehaviors('/', function(meta, content) {
@@ -503,28 +596,35 @@ describe('RAML.FileSystem.Folder', function() {
   });
 
   describe('#create', function() {
-    beforeEach(function() {
-      this.root = Folder.root();
-      this.folder = Folder.create(this.root, '/folder/');
-    });
+    describe('by default', function() {
+      beforeEach(function() {
+        this.root = Folder.root();
+        this.folder = Folder.create(this.root, '/folder/');
+        this.root.folders.push(this.folder);
+      });
 
-    it('sets the path', function() {
-      this.folder.path.should.eql('/folder');
-    });
+      it('sets the path', function() {
+        this.folder.path.should.eql('/folder');
+      });
 
-    it('sets the name', function() {
-      this.folder.name.should.eql('folder');
-    });
+      it('sets the name', function() {
+        this.folder.name.should.eql('folder');
+      });
 
-    it('exposes a convenience remove function', function() {
-      this.sandbox.stub(this.root, 'removeFolder');
-      this.folder.remove();
-      this.root.removeFolder.should.have.been.calledWith(this.folder);
+      it('exposes a convenience remove function', function() {
+        this.sandbox.stub(this.root, 'removeFolder');
+        this.folder.remove();
+        this.root.removeFolder.should.have.been.calledWith(this.folder);
+      });
     });
 
     verifyFolderBehaviors('/folder/', function(meta, content) {
+      // meh
       var root = Folder.root(meta, content);
-      return Folder.create(root, '/folder/', meta, content);
+      var folder = Folder.create(root, '/folder/', meta, content);
+      root.folders.push(folder);
+
+      return folder;
     });
   });
 });

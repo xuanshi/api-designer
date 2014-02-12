@@ -2,7 +2,7 @@
   'use strict';
 
   RAML.FileSystem.createFolderClass = function(File, $q, $rootScope, fileSystem, ramlSnippets) {
-    var TRAILING_SLASH_DETECTOR = /\/$/;
+    var TRAILING_SLASH_DETECTOR = /\/$/, root;
 
     function sanitizePath(path) {
       if (TRAILING_SLASH_DETECTOR.exec(path)) {
@@ -36,6 +36,18 @@
         item.error = error;
         return item;
       };
+    }
+
+    function removeFile(file, folder) {
+      var index = folder.files.indexOf(file);
+      if (index !== -1) {
+        folder.files.splice(index, 1);
+      }
+    }
+
+    function insertFile(file, folder) {
+      folder.files.push(file);
+      folder.files.sort(byName);
     }
 
     function RamlFolder(meta, contents) {
@@ -94,8 +106,7 @@
         file.contents = '';
       }
 
-      this.files.push(file);
-      this.files.sort(byName);
+      insertFile(file, this);
       $rootScope.$broadcast('event:raml-editor-file-created', file);
 
       return file;
@@ -116,11 +127,9 @@
     };
 
     RamlFolder.prototype.removeFile = function(file) {
-      var index = this.files.indexOf(file), persisted = file.persisted;
-      if (index !== -1) {
-        this.files.splice(index, 1);
-      }
+      var persisted = file.persisted;
       file.persisted = file.dirty = false;
+      removeFile(file, this);
       $rootScope.$broadcast('event:raml-editor-file-removed', file);
 
       function returnFile() {
@@ -130,6 +139,33 @@
 
       var removed = persisted ? fileSystem.remove(file.path) : $q.when();
       return removed.then(returnFile, handleErrorFor(file));
+    };
+
+    RamlFolder.prototype.moveFile = function(file, path) {
+      var sourceFolder = this, destinationFolder, rename;
+
+      destinationFolder = sourceFolder.fileOrFolderAtPath(path);
+      if (!destinationFolder) {
+        throw new Error('Unknown folder: ' + path);
+      }
+
+      var newPath = fullPathFrom(destinationFolder.path, file.name),
+          movedFile = File.create(destinationFolder, newPath, file.contents, file);
+
+      removeFile(file, sourceFolder);
+      insertFile(movedFile, destinationFolder);
+
+      function returnFile() {
+        return movedFile;
+      }
+
+      if (file.persisted) {
+        rename = fileSystem.rename(file.path, movedFile.path);
+      } else {
+        rename = $q.when();
+      }
+
+      return rename.then(returnFile, handleErrorFor(file));
     };
 
     RamlFolder.prototype.containedFiles = function() {
@@ -147,9 +183,20 @@
     };
 
     RamlFolder.prototype.fileOrFolderAtPath = function(path) {
-      var segments = path.split('/');
+      var lookupFolder = this, segments, item;
 
-      var item = this.fileOrFolderNamed(segments[0]);
+      if (path.indexOf('/') === 0) {
+        path = path.slice(1);
+        lookupFolder = root;
+      }
+
+      if (path.length === 0) {
+        return lookupFolder;
+      }
+
+      segments = path.split('/');
+
+      item = lookupFolder.fileOrFolderNamed(segments[0]);
       if (!item || segments.length === 1) {
         return item;
       } else {
@@ -160,11 +207,11 @@
 
     var Folder = {
       root: function(meta, contents) {
-        var folder = new RamlFolder(meta, contents);
-        folder.path = '/';
-        folder.name = '/';
+        root = new RamlFolder(meta, contents);
+        root.path = '/';
+        root.name = '/';
 
-        return folder;
+        return root;
       },
 
       create: function(parent, path, meta, contents) {
@@ -178,6 +225,8 @@
         return folder;
       },
     };
+
+    root = Folder.root();
 
     return Folder;
   };
