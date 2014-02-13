@@ -1,0 +1,19 @@
+.button(@color) {
+  display: inline-block;
+  padding: 4px 12px;
+  min-width: 100px;
+  font-size: 13px;
+  line-height: 20px;
+  cursor: pointer;
+  border: 1px solid @color;
+  color: white;
+
+  border-radius: 4px;
+  text-transform: uppercase;
+
+  text-shadow: 0 1px 1px fade(@color, 50%);
+  background-color: @color;
+}
+
+.btn-primary { .button(#0a93c8); }
+.btn-dismiss { .button(#A2A4AA); }

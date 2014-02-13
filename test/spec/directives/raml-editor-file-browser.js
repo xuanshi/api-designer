@@ -417,6 +417,24 @@ describe('ramlEditorFileBrowser', function() {
     });
   });
 
+  describe('when a file is moved', function() {
+    beforeEach(function() {
+      this.root.createFile('file1');
+      this.root.createFile('file2');
+      compileFileBrowser(this.scope);
+
+      var file = this.root.files[1];
+      inject(function($rootScope) {
+        $rootScope.$broadcast('event:raml-editor-file-moved', file);
+        $rootScope.$digest();
+      });
+    });
+
+    it('selects the file', function() {
+      this.scope.fileBrowser.selectedFile.name.should.equal('file2');
+    });
+  });
+
   describe('removing a file', function() {
     beforeEach(function() {
       this.root.createFile('alpha.raml');

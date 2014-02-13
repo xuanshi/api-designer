@@ -165,6 +165,7 @@
         rename = $q.when();
       }
 
+      $rootScope.$broadcast('event:raml-editor-file-moved', movedFile);
       return rename.then(returnFile, handleErrorFor(file));
     };
 
@@ -172,6 +173,12 @@
       return this.folders.reduce(function(files, folder) {
         return files.concat(folder.containedFiles());
       }, this.files);
+    };
+
+    RamlFolder.prototype.containedFolders = function() {
+      return this.folders.reduce(function(folders, folder) {
+        return folders.concat(folder.containedFolders());
+      }, this.folders);
     };
 
     RamlFolder.prototype.fileOrFolderNamed = function(name) {

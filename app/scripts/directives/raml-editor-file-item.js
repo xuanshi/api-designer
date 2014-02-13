@@ -1,7 +1,7 @@
 /* jshint newcap: false */
 (function() {
   'use strict';
-  angular.module('ramlEditorApp').directive('ramlEditorFileItem', function(fileSystem, ramlEditorRemoveFilePrompt, ramlEditorFilenamePrompt, $window) {
+  angular.module('ramlEditorApp').directive('ramlEditorFileItem', function(fileSystem, ramlEditorRemoveFilePrompt, ramlEditorFilenamePrompt, $modal) {
     function Actions(folder, file) {
       return [
         {
@@ -27,12 +27,22 @@
         {
           label: 'Move',
           execute: function() {
-            var newPath = $window.prompt('Choose a destination folder path:');
-            try {
-              folder.moveFile(file, newPath);
-            } catch (e) {
-              $window.alert(e.message);
-            }
+            fileSystem.root.then(function(root) {
+              var moveFileModal = $modal.open({
+                templateUrl: 'views/raml-editor-move-file-dialog.tmpl.html',
+                controller: function($scope) {
+                  $scope.folders = [root].concat(root.containedFolders());
+                  $scope.moveFile = function(newPath) {
+                    try {
+                      folder.moveFile(file, newPath);
+                      moveFileModal.close();
+                    } catch (e) {
+                      $scope.alert = e.message;
+                    }
+                  };
+                }
+              });
+            });
           }
         }
       ];

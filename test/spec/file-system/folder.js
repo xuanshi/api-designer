@@ -432,6 +432,7 @@ describe('RAML.FileSystem.Folder', function() {
 
         describe('by default', function() {
           beforeEach(function() {
+            this.sandbox.spy(this.$rootScope, '$broadcast');
             this.successSpy = this.sandbox.spy();
             this.file.persisted = true;
             this.folder.moveFile(this.file, this.subFolder.path).then(this.successSpy);
@@ -455,6 +456,11 @@ describe('RAML.FileSystem.Folder', function() {
           it('delegates to the file system', function() {
             var movedFile = this.subFolder.files[0];
             this.fileSystem.rename.should.have.been.calledWith(this.file.path, movedFile.path);
+          });
+
+          it('broadcasts an event', function() {
+            var movedFile = this.subFolder.files[0];
+            this.$rootScope.$broadcast.should.have.been.calledWith('event:raml-editor-file-moved', movedFile);
           });
 
           describe('on success', function() {
@@ -520,7 +526,7 @@ describe('RAML.FileSystem.Folder', function() {
       });
     });
 
-    describe('calculating total file count', function() {
+    describe('retrieving all contained files', function() {
       beforeEach(function() {
         this.sandbox.stub(this.fileSystem, 'createFolder').returns(defer().promise);
         function createFile(folder) {
@@ -538,13 +544,32 @@ describe('RAML.FileSystem.Folder', function() {
         this.folder.folders[0].folders.forEach(createFile);
       });
 
-      it('returns the number of files contained in this and all sub folders', function() {
+      it('returns all files contained in this and all sub folders', function() {
         var paths = this.folder.containedFiles().map(function(file) { return file.path; });
         paths.length.should.eql(4);
         paths.should.include(path + 'file.raml');
         paths.should.include(path + 'alpha/file.raml');
         paths.should.include(path + 'beta/file.raml');
         paths.should.include(path + 'alpha/alpha/file.raml');
+      });
+    });
+
+    describe('retrieving all contained folders', function() {
+      beforeEach(function() {
+        this.sandbox.stub(this.fileSystem, 'createFolder').returns(defer().promise);
+        this.folder = createFolder();
+
+        this.folder.createFolder('alpha');
+        this.folder.createFolder('beta');
+        this.folder.folders[0].createFolder('alpha');
+      });
+
+      it('returns all folders contained in this and all sub folders', function() {
+        var paths = this.folder.containedFolders().map(function(file) { return file.path; });
+        paths.length.should.eql(3);
+        paths.should.include(path + 'alpha');
+        paths.should.include(path + 'beta');
+        paths.should.include(path + 'alpha/alpha');
       });
     });
 

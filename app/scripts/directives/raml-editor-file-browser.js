@@ -48,6 +48,10 @@
         $scope.fileBrowser.selectFile(file);
       });
 
+      $scope.$on('event:raml-editor-file-moved', function(event, file) {
+        $scope.fileBrowser.selectFile(file);
+      });
+
       $scope.$on('event:raml-editor-file-removed', function(event, file) {
         if (file !== $scope.fileBrowser.selectedFile) {
           return;
