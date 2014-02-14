@@ -57,12 +57,12 @@ describe('RAML Editor Main Controller', function () {
 
   describe('leaving the page', function() {
     it('should ask user for confirmation if there are unsaved changes', function () {
-      scope.homeDirectory = {
-        files: [
+      scope.homeFolder = {
+        containedFiles: sandbox.stub().returns([
           { dirty: false },
           { dirty: true },
           { dirty: false }
-        ]
+        ])
       };
       ctrl = $controller('ramlEditorMain', params);
 
@@ -70,12 +70,12 @@ describe('RAML Editor Main Controller', function () {
     });
 
     it('should not ask user for confirmation if there are no unsaved changes', function () {
-      scope.homeDirectory = {
-        files: [
+      scope.homeFolder = {
+        containedFiles: sandbox.stub().returns([
           { dirty: false },
           { dirty: false },
           { dirty: false }
-        ]
+        ])
       };
       ctrl = $controller('ramlEditorMain', params);
 

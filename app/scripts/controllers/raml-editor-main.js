@@ -223,7 +223,7 @@ angular.module('ramlEditorApp')
 
       // Warn before leaving the page
       $window.onbeforeunload = function () {
-        var anyUnsavedChanges = $scope.homeDirectory.files.some(function(file) {
+        var anyUnsavedChanges = $scope.homeFolder.containedFiles().some(function(file) {
           return file.dirty;
         });
 
