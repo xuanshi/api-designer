@@ -49,7 +49,9 @@ angular.module('ramlEditorApp')
     safeApply, safeApplyWrapper, debounce, throttle, ramlHint, ramlParser, ramlParserFileReader, ramlRepository, eventService, codeMirror,
     codeMirrorErrors, config, $prompt, $confirm, $modal
   ) {
-    var editor, currentFile, extractCurrentFileLabel = function(file) {
+    var editor, lineOfCurrentError, currentFile;
+
+    function extractCurrentFileLabel(file) {
       var label = '';
       if (file) {
         label = file.path;
@@ -59,7 +61,32 @@ angular.module('ramlEditorApp')
       }
 
       return label;
-    };
+    }
+
+    function calculatePositionOfErrorMark(currentLine) {
+      function onlyFolds(textMark) {
+        return textMark.__isFold;
+      }
+
+      function toStartingLine(textMark) {
+        return textMark.find().from.line;
+      }
+
+      function toMinimum(currentMin, val) {
+        return Math.min(currentMin, val);
+      }
+
+      var position = { line: currentLine };
+      return editor.findMarksAt(position).filter(onlyFolds).map(toStartingLine).reduce(toMinimum, lineOfCurrentError);
+    }
+
+    function formatErrorMessage(message, actualLine, displayLine) {
+      if (displayLine === actualLine) {
+        return message;
+      }
+
+      return 'Error on line ' + (actualLine + 1) + ': ' + message;
+    }
 
     $window.setTheme = function setTheme(theme) {
       config.set('theme', theme);
@@ -124,7 +151,8 @@ angular.module('ramlEditorApp')
       $scope.clearErrorMarks();
 
       if (!$scope.fileParsable || source.trim() === '') {
-        $scope.hasErrors = false;
+        $scope.currentError = undefined;
+        lineOfCurrentError = undefined;
         return;
       }
 
@@ -144,19 +172,30 @@ angular.module('ramlEditorApp')
     eventService.on('event:raml-parsed', safeApplyWrapper($scope, function onRamlParser(event, raml) {
       $scope.title     = raml.title;
       $scope.version   = raml.version;
-      $scope.hasErrors = false;
+      $scope.currentError = undefined;
+      lineOfCurrentError = undefined;
     }));
 
     eventService.on('event:raml-parser-error', safeApplyWrapper($scope, function onRamlParserError(event, error) {
-      var problemMark  = 'problem_mark';
-      var line         = error[problemMark] ? error[problemMark].line   : 0;
-      var column       = error[problemMark] ? error[problemMark].column : 0;
-      $scope.hasErrors = true;
+      /*jshint sub: true */
+      var problemMark = error['problem_mark'],
+          displayLine = 0,
+          displayColumn = 0,
+          message = error.message;
+
+      lineOfCurrentError = displayLine;
+      $scope.currentError = error;
+
+      if (problemMark) {
+        lineOfCurrentError = problemMark.line;
+        displayLine = calculatePositionOfErrorMark(lineOfCurrentError);
+        displayColumn = problemMark.column;
+      }
 
       codeMirrorErrors.displayAnnotations([{
-        line:    line + 1,
-        column:  column + 1,
-        message: error.message
+        line:    displayLine + 1,
+        column:  displayColumn + 1,
+        message: formatErrorMessage(message, lineOfCurrentError, displayLine)
       }]);
     }));
 
@@ -211,11 +250,30 @@ angular.module('ramlEditorApp')
     });
 
     (function bootstrap() {
-      $scope.hasErrors       = false;
+      $scope.currentError     = undefined;
       $scope.theme           = $rootScope.theme = config.get('theme', 'dark');
       $scope.shelf           = {};
       $scope.shelf.collapsed = JSON.parse(config.get('shelf.collapsed', 'false'));
       $scope.editor          = editor = codeMirror.initEditor();
+
+      editor.on('fold', function(cm, start, end) {
+        if (start.line <= lineOfCurrentError && lineOfCurrentError <= end.line) {
+          codeMirrorErrors.displayAnnotations([{
+            line:    start.line + 1,
+            message: formatErrorMessage($scope.currentError.message, lineOfCurrentError, start.line)
+          }]);
+        }
+      });
+
+      editor.on('unfold', function() {
+        var displayLine = calculatePositionOfErrorMark(lineOfCurrentError);
+
+        var message = formatErrorMessage($scope.currentError.message, lineOfCurrentError, displayLine);
+        codeMirrorErrors.displayAnnotations([{
+          line:    displayLine + 1,
+          message: message
+        }]);
+      });
 
       editor.on('change', debounce(function onChange() {
         $scope.sourceUpdated();

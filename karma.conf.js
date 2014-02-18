@@ -67,6 +67,7 @@ module.exports = function(config) {
       'app/scripts/directives/raml-editor-folder-item.js',
       'app/scripts/directives/raml-editor-file-browser.js',
       'app/scripts/directives/raml-editor-file-item.js',
+      'app/scripts/directives/raml-editor-save-file-button.js',
       'app/scripts/directives/raml-editor-context-menu.js',
 
       'test/mock/**/*.js',

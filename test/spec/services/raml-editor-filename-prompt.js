@@ -29,6 +29,7 @@ describe('ramlEditorFilenamePrompt', function() {
 
   describe('getting a file name', function() {
     var promptSpy;
+    var promptSpyReturns;
 
     beforeEach(function() {
       promptSpy = sandbox.stub(window, 'prompt');
@@ -75,13 +76,6 @@ describe('ramlEditorFilenamePrompt', function() {
         it('alerts the user', function() {
           alertSpy.should.have.been.calledWith('That name is already taken.');
         });
-
-        it('rejects the promise', function(done) {
-          promise.then(undefined, function() {
-            done();
-          });
-          digest();
-        });
       });
     });
 
@@ -89,7 +83,7 @@ describe('ramlEditorFilenamePrompt', function() {
       var promise;
 
       beforeEach(function() {
-        promptSpy.returns(null);
+        promptSpyReturns = [null];
 
         promise = newFilePrompt.fileName(folder);
         digest();

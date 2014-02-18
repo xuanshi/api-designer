@@ -33,12 +33,14 @@ describe('ramlEditorContextMenu', function() {
   });
 
   describe('when open', function() {
-    var scrollDisableStub, scrollEnableStub;
+    var scrollDisableStub, scrollEnableStub, rectStub;
 
     beforeEach(inject(function(scroll) {
       var event = {
         stopPropagation: angular.noop,
-        target: {}
+        target: {
+          getBoundingClientRect: angular.noop
+        }
       };
 
       file = {
@@ -47,6 +49,13 @@ describe('ramlEditorContextMenu', function() {
 
       scrollDisableStub = sinon.stub(scroll, 'disable');
       scrollEnableStub = sinon.stub(scroll, 'enable');
+      rectStub = sinon.stub(event.target, 'getBoundingClientRect').returns({
+        left: 1,
+        width: 2,
+        top: 3,
+        height: 4
+      });
+
       contextMenu.open(event, file);
       scope.$digest();
     }));
