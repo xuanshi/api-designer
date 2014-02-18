@@ -1,6 +1,7 @@
 'use strict';
 
 describe('RAML.FileSystem.Folder', function() {
+  var sandbox;
   beforeEach(module('fs'));
 
   var digest, defer, File, Folder;
@@ -15,7 +16,7 @@ describe('RAML.FileSystem.Folder', function() {
   }));
 
   beforeEach(inject(function($q, $rootScope, ramlSnippets) {
-    this.sandbox = sinon.sandbox.create();
+    sandbox = this.sandbox = sinon.sandbox.create();
     this.fileSystem = new RAML.FileSystem();
     this.$rootScope = $rootScope;
 
@@ -480,6 +481,43 @@ describe('RAML.FileSystem.Folder', function() {
         this.folder.fileOrFolderAtPath('alpha/file.raml').should.eql(this.folder.folders[0].files[0]);
         this.folder.fileOrFolderAtPath('alpha/alpha/file.raml').should.eql(this.folder.folders[0].folders[0].files[0]);
         should.not.exist(this.folder.fileOrFolderAtPath('not/a/thing'));
+      });
+    });
+
+    describe('saving all files', function() {
+      function createFile(folder, name, dirty) {
+        var file = folder.createFile(name);
+        file.dirty = dirty;
+        sandbox.spy(file, 'save');
+        return file;
+      }
+
+      beforeEach(function() {
+        this.folder = createFolder();
+        this.files = [
+          createFile(this.folder, 'unsaved', true),
+          createFile(this.folder, 'saved', false),
+          createFile(this.folder, 'unsaved 2', true)
+        ];
+
+        this.deferred = defer();
+        this.sandbox.stub(this.folder, 'containedFiles').returns(this.files);
+        this.sandbox.stub(this.fileSystem, 'save').returns(this.deferred.promise);
+      });
+
+      describe('by default', function() {
+        beforeEach(function() {
+          this.folder.saveAll();
+        });
+
+        it('calls save on the dirty files', function() {
+          this.files[0].save.should.have.been.called;
+          this.files[2].save.should.have.been.called;
+        });
+
+        it('does not call save on non-dirty files', function() {
+          this.files[1].save.should.not.have.been.called;
+        });
       });
     });
   }

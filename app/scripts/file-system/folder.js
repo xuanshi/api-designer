@@ -158,6 +158,14 @@
       }
     };
 
+    RamlFolder.prototype.saveAll = function() {
+      var files = this.containedFiles();
+
+      files.filter(function(file) { return file.dirty; })
+        .forEach(function(file) {
+          file.save();
+        });
+    };
     var Folder = {
       root: function(meta, contents) {
         var folder = new RamlFolder(meta, contents);
