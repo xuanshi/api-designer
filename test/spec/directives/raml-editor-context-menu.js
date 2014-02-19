@@ -56,21 +56,24 @@ describe('ramlEditorContextMenu', function() {
     });
 
     describe('closing', function() {
-      it('closes when clicking on the page', function() {
+      it('closes when clicking on the page', function(done) {
         el[0].getBoundingClientRect().height.should.not.eql(0);
         document.body.dispatchEvent(events.click());
+        done();
         el[0].getBoundingClientRect().height.should.eql(0);
       });
 
-      it('closes on pressing escape', function() {
+      it('closes on pressing escape', function(done) {
         var event = events.keydown(27);
         el[0].getBoundingClientRect().height.should.not.eql(0);
         el[0].dispatchEvent(event);
+        done();
         el[0].getBoundingClientRect().height.should.eql(0);
       });
 
-      it('enables scroll', function() {
+      it('enables scroll', function(done) {
         document.body.dispatchEvent(events.click());
+        done();
         scrollEnableStub.should.have.been.called;
       });
     });
