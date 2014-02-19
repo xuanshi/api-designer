@@ -106,6 +106,7 @@
       };
 
       this.openContextMenu = function(event, actions, onClose) {
+        event.stopPropagation();
         contextMenu.open(event, actions, onClose);
       };
     };
